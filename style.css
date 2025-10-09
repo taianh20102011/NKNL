@@ -475,3 +475,39 @@ html, body, * {
   --danger: #dc2626;
   --border: rgba(11,17,32,0.06);
 }
+/* Trong style.css, thêm vào sau phần responsive */
+
+/* Khi màn hình nhỏ (ví dụ < 980px), hiển thị nút hamburger */
+@media (max-width: 980px) {
+  .menu {
+    display: none; /* ẩn menu mặc định */
+  }
+  .nav .hamburger {
+    display: block;
+    cursor: pointer;
+    font-size: 1.4rem;
+    color: var(--muted);
+    padding: 8px;
+  }
+  .menu.mobile-open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 0;
+    z-index: 200;
+  }
+  .menu.mobile-open a {
+    padding: 12px 18px;
+  }
+}
+
+/* Ẩn hamburger trên màn lớn */
+.nav .hamburger {
+  display: none;
+}
+
