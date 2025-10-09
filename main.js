@@ -1,18 +1,25 @@
-// main.js — Firebase Auth + Firestore user data (final secure version)
+// main.js — NKNL 2025: Firebase Auth + Firestore + Chart + Theme
+// --------------------------------------------------------------
 
 /* =======================
-   FIREBASE CONFIGURATION
+   IMPORT FIREBASE MODULES
    ======================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import {
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged
+  getAuth,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, query, orderBy, serverTimestamp,
-  getDocs, onSnapshot
+  getFirestore, collection, addDoc, query, orderBy,
+  serverTimestamp, getDocs, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
+/* =======================
+   FIREBASE CONFIG
+   ======================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
   authDomain: "nknl-d7b54.firebaseapp.com",
@@ -27,83 +34,77 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-console.info("✅ Firebase initialized with Auth & Firestore");
+console.info("✅ Firebase initialized");
 
 /* =======================
    HELPERS
    ======================= */
 const q = (s) => document.querySelector(s);
 const escapeHtml = (text = '') => {
-  const d = document.createElement('div');
-  d.textContent = text;
-  return d.innerHTML;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 };
 
 /* =======================
-   THEME TOGGLE
+   THEME SWITCHER
    ======================= */
 document.addEventListener("DOMContentLoaded", () => {
-  const toggle = q("#theme-toggle");
-  const applyTheme = (t) => {
-    if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+  const themeToggle = document.querySelector("#theme-toggle");
+  const applyTheme = (theme) => {
+    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
     else document.documentElement.removeAttribute("data-theme");
   };
-  let theme = localStorage.getItem("theme") || "dark";
-  applyTheme(theme);
-  if (toggle) {
-    toggle.textContent = theme === "light" ? "🌞" : "🌙";
-    toggle.addEventListener("click", () => {
-      theme = theme === "light" ? "dark" : "light";
-      localStorage.setItem("theme", theme);
-      applyTheme(theme);
-      toggle.textContent = theme === "light" ? "🌞" : "🌙";
+  let currentTheme = localStorage.getItem("theme") || "dark";
+  applyTheme(currentTheme);
+  if (themeToggle) {
+    themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
+    themeToggle.addEventListener("click", () => {
+      currentTheme = currentTheme === "light" ? "dark" : "light";
+      applyTheme(currentTheme);
+      localStorage.setItem("theme", currentTheme);
+      themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
     });
   }
 });
 
 /* =======================
-   AUTH SYSTEM (Sign up / Sign in / Logout)
+   AUTH: REGISTER / LOGIN / LOGOUT
    ======================= */
-const signupForm = q("#signup-form");
+const registerForm = q("#register-form");
 const loginForm = q("#login-form");
 const logoutBtn = q("#logout-btn");
 
-if (signupForm) {
-  signupForm.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const email = q("#signup-email").value.trim();
-    const password = q("#signup-password").value.trim();
-    const name = q("#signup-name").value.trim();
-
-    if (!email || !password || !name) return alert("Vui lòng nhập đầy đủ thông tin.");
-
+if (registerForm) {
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = q("#register-email").value.trim();
+    const password = q("#register-password").value.trim();
+    const name = q("#register-name").value.trim();
+    if (!email || !password || !name) return alert("Nhập đầy đủ thông tin!");
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-      alert("Đăng ký thành công!");
       localStorage.setItem("nk-user-name", name);
+      alert("Đăng ký thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
-      console.error(err);
-      alert("❌ Lỗi đăng ký: " + err.message);
+      alert("Lỗi đăng ký: " + err.message);
     }
   });
 }
 
 if (loginForm) {
-  loginForm.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
     const email = q("#login-email").value.trim();
     const password = q("#login-password").value.trim();
-
     if (!email || !password) return alert("Nhập email và mật khẩu!");
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Đăng nhập thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
-      alert("❌ Lỗi đăng nhập: " + err.message);
+      alert("Lỗi đăng nhập: " + err.message);
     }
   });
 }
@@ -117,55 +118,50 @@ if (logoutBtn) {
 }
 
 /* =======================
-   FIRESTORE JOURNAL (Per user)
+   JOURNAL SYSTEM (per user)
    ======================= */
 let entries = [];
 let chart = null;
-const journalList = q("#journal-list");
-const journalForm = q("#journal-form");
 
-async function fetchEntries(uid) {
+async function fetchEntries(user) {
+  if (!user) return [];
   try {
-    const colRef = collection(db, "users", uid, "journalEntries");
+    const colRef = collection(db, "users", user.uid, "journalEntries");
     const qref = query(colRef, orderBy("createdAt", "desc"));
     const snap = await getDocs(qref);
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
-    console.error("❌ Fetch error:", err);
+    console.error("❌ fetchEntries failed:", err);
     return [];
   }
 }
 
-async function addEntry(uid, entry) {
+async function addEntry(user, entry) {
+  if (!user) return;
   try {
-    const colRef = collection(db, "users", uid, "journalEntries");
+    const colRef = collection(db, "users", user.uid, "journalEntries");
     await addDoc(colRef, { ...entry, createdAt: serverTimestamp() });
   } catch (err) {
-    console.error("❌ Add entry failed:", err);
+    console.error("❌ addEntry failed:", err);
   }
 }
 
-/* =======================
-   JOURNAL LOGIC (Render + Chart)
-   ======================= */
 function renderEntries() {
-  if (!journalList) return;
+  const list = q("#journal-list");
+  if (!list) return;
   if (!entries.length) {
-    journalList.innerHTML = `<li class="muted">Chưa có nhật ký nào — hãy thêm ngay!</li>`;
+    list.innerHTML = `<li class="muted">Chưa có nhật ký nào — hãy thêm ngay!</li>`;
     return;
   }
-  journalList.innerHTML = entries.slice(0, 10).map(e => `
+  list.innerHTML = entries.slice(0, 10).map(e => `
     <li>
-      <div style="display:flex;justify-content:space-between;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
         <strong>${escapeHtml(e.date)}</strong>
-        <span style="font-weight:700;color:var(--accent)">
-          ⭐ ${(e.rating || 0)}/10
-        </span>
+        <span style="font-weight:700;color:var(--accent)">⭐ ${e.rating || 0}/10</span>
       </div>
-      <div><b>${escapeHtml(e.goal)}</b></div>
-      <div style="color:var(--muted)">${escapeHtml(e.activities || 'Không ghi')}</div>
-    </li>
-  `).join("");
+      <div style="font-weight:700">${escapeHtml(e.goal)}</div>
+      <div style="color:var(--muted);margin-top:4px">${escapeHtml(e.activities || "Không ghi")}</div>
+    </li>`).join("");
 }
 
 function updateChart() {
@@ -181,55 +177,71 @@ function updateChart() {
       datasets: [{
         label: "Mức tiến bộ",
         data,
-        borderColor: "rgba(79,70,229,1)",
-        backgroundColor: "rgba(79,70,229,0.15)",
         tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 3,
         fill: true,
+        backgroundColor: "rgba(79,70,229,0.12)",
+        borderColor: "rgba(79,70,229,1)"
       }]
     },
-    options: { scales: { y: { beginAtZero: true, max: 10 } } }
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 10 } }
+    }
   });
 }
 
 /* =======================
-   LISTEN AUTH STATE
+   ON AUTH STATE CHANGE
    ======================= */
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    console.log("🔑 Logged in as:", user.email);
-    const name = localStorage.getItem("nk-user-name") || user.email.split("@")[0];
-    document.querySelectorAll(".brand").forEach(el =>
-      el.innerHTML = `NK<span>NL</span> — ${name}`
-    );
+  const name = localStorage.getItem("nk-user-name") || (user?.email || "");
+  document.querySelectorAll(".brand").forEach(el => el.innerHTML = `NK<span>NL</span> — ${escapeHtml(name)}`);
 
-    entries = await fetchEntries(user.uid);
-    renderEntries();
-    updateChart();
-
-    if (journalForm) {
-      journalForm.addEventListener("submit", async (ev) => {
-        ev.preventDefault();
-        const date = q("#date").value;
-        const goal = q("#goal").value.trim();
-        const activities = q("#activities").value.trim();
-        const rating = Number(q("#rating").value || 0);
-
-        if (!date || !goal || !rating) return alert("Vui lòng nhập đủ thông tin.");
-        const entry = { date, goal, activities, rating };
-        entries.unshift(entry);
-        renderEntries();
-        updateChart();
-        journalForm.reset();
-        await addEntry(user.uid, entry);
-      });
-    }
-
-  } else {
-    console.log("🚪 Chưa đăng nhập.");
+  if (!user) {
     if (window.location.pathname.endsWith("analytics.html")) {
       window.location.href = "login.html";
     }
+    return;
+  }
+
+  // Load entries
+  entries = await fetchEntries(user);
+  renderEntries();
+  updateChart();
+
+  // Realtime updates
+  try {
+    const colRef = collection(db, "users", user.uid, "journalEntries");
+    const qref = query(colRef, orderBy("createdAt", "desc"));
+    onSnapshot(qref, snap => {
+      entries = snap.docs.map(d => d.data());
+      renderEntries();
+      updateChart();
+    });
+  } catch (err) {
+    console.warn("Realtime error:", err);
+  }
+
+  // Add entry handler
+  const form = q("#journal-form");
+  if (form) {
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const date = q("#date").value;
+      const goal = q("#goal").value.trim();
+      const activities = q("#activities").value.trim();
+      const rating = Number(q("#rating").value || 0);
+      if (!date || !goal) return alert("Nhập đầy đủ ngày và mục tiêu!");
+      const entry = { date, goal, activities, rating };
+      entries.unshift(entry);
+      renderEntries();
+      updateChart();
+      form.reset();
+      await addEntry(user, entry);
+    });
   }
 });
 
-console.log("🔥 NK-NL App with Firebase Auth loaded successfully!");
+console.log("🔥 NK-NL main.js loaded successfully");
