@@ -1,12 +1,12 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Đăng nhập — Nhật kí Năng lực</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Đăng nhập | Nhật ký năng lực</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="login-body">
+<body>
   <header class="nav">
     <div class="container nav-inner">
       <a href="index.html" class="brand">NK<span>NL</span></a>
@@ -19,20 +19,13 @@
       <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
     </div>
   </header>
-  <div class="login-container card">
-    <h2>Đăng nhập</h2>
-    <form id="login-form">
-      <label>Tên đăng nhập
-        <input id="login-username" required placeholder="Tên của bạn">
-      </label>
-      <label>Mật khẩu
-        <input id="login-password" type="password" required placeholder="••••••">
-      </label>
-      <button type="submit" class="btn full">Đăng nhập</button>
-      <p class="muted small">Dữ liệu sẽ lưu cục bộ trên thiết bị của bạn.</p>
-    </form>
-  </div>
-
+  <h2>🔑 Đăng nhập</h2>
+  <form id="login-form">
+    <input id="login-email" type="email" placeholder="Email" required />
+    <input id="login-password" type="password" placeholder="Mật khẩu" required />
+    <button type="submit">Đăng nhập</button>
+  </form>
+  <p>Chưa có tài khoản? <a href="signup.html">Đăng ký</a></p>
   <script type="module" src="main.js"></script>
 </body>
 </html>
