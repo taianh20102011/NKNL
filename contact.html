@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Liên hệ — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">NK<span>NL</span></a>
+      <nav class="menu">
+        <a href="index.html">Trang chủ</a>
+        <a href="features.html">Tính năng</a>
+        <a href="analytics.html">Demo</a>
+        <a href="about.html">Giới thiệu</a>
+        <a href="login.html">Login</a>
+      </nav>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container contact">
+      <h1>Liên hệ với chúng tôi</h1>
+      <p class="lead">
+        Nếu bạn có bất kỳ câu hỏi, ý kiến đóng góp hay mong muốn hợp tác, hãy để lại lời nhắn bên dưới.  
+        Đội ngũ của chúng tôi sẽ phản hồi sớm nhất có thể.
+      </p>
+
+      <form id="contact-form" class="contact-form">
+        <label>👤 Họ và tên</label>
+        <input type="text" id="name" placeholder="Nhập họ và tên..." required>
+
+        <label>📧 Email</label>
+        <input type="email" id="email" placeholder="Nhập email..." required>
+
+        <label>💬 Nội dung góp ý</label>
+        <textarea id="message" rows="5" placeholder="Hãy chia sẻ ý kiến của bạn..."></textarea>
+
+        <button type="submit" class="btn">Gửi liên hệ</button>
+      </form>
+
+      <div id="contact-success" class="hidden success-message">
+        ✅ Cảm ơn bạn! Chúng tôi đã nhận được phản hồi của bạn.
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">© 2025 Nhật ký Năng lực — Demo.</div>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

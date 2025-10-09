@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Đăng nhập — Nhật kí Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-body">
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">NK<span>NL</span></a>
+      <nav class="menu">
+        <a href="index.html">Trang chủ</a>
+        <a href="features.html">Tính năng</a>
+        <a href="analytics.html">Demo</a>
+        <a href="about.html">Giới thiệu</a>
+      </nav>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
+    </div>
+  </header>
+  <div class="login-container card">
+    <h2>Đăng nhập</h2>
+    <form id="login-form">
+      <label>Tên đăng nhập
+        <input id="login-username" required placeholder="Tên của bạn">
+      </label>
+      <label>Mật khẩu
+        <input id="login-password" type="password" required placeholder="••••••">
+      </label>
+      <button type="submit" class="btn full">Đăng nhập</button>
+      <p class="muted small">Dữ liệu sẽ lưu cục bộ trên thiết bị của bạn.</p>
+    </form>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Demo — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">NK<span>NL</span></a>
+      <nav class="menu">
+        <a href="index.html">Trang chủ</a>
+        <a href="features.html">Tính năng</a>
+        <a href="about.html">Giới thiệu</a>
+        <a href="contact.html">Liên hệ</a>
+        <a href="login.html">Login</a>
+      </nav>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <h1>Ghi nhật ký & đánh giá năng lực</h1>
+      <p class="lead">Ghi lại tiến trình học tập, cảm nhận và điểm mạnh – hệ thống sẽ gợi ý hướng phát triển phù hợp.</p>
+
+      <section class="journal">
+        <form id="journal-form">
+          <label>📅 Ngày:</label>
+          <input type="date" id="date" required />
+
+          <label>🎯 Mục tiêu hôm nay:</label>
+          <input type="text" id="goal" placeholder="VD: Học 10 từ vựng mới..." required />
+
+          <label>💪 Hoạt động đã làm:</label>
+          <textarea id="activities" rows="3" placeholder="Ghi lại những gì bạn đã làm..."></textarea>
+
+          <label>⭐ Tự đánh giá (1–10):</label>
+          <input type="number" id="rating" min="1" max="10" required />
+
+          <button type="submit" class="btn">Lưu nhật ký</button>
+        </form>
+      </section>
+
+      <section class="chart-area">
+        <h2>📊 Biểu đồ tiến bộ</h2>
+        <canvas id="progressChart"></canvas>
+      </section>
+
+      <section class="log-list">
+        <h2>📔 Nhật ký gần đây</h2>
+        <ul id="journal-list"></ul>
+      </section>
+        <section class="chart-section">
+        <h3>Biểu đồ tiến bộ</h3>
+        <canvas id="progressChart"></canvas>
+
+        <button id="analyze-btn">🔍 Phân tích bằng AI</button>
+        <div id="ai-analysis" class="ai-box"></div>
+        </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">© 2025 Nhật ký Năng lực — Demo.</div>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
