@@ -1,9 +1,13 @@
-// main.js — Firebase + user-based storage + UI logic (final stable version)
+// main.js — Firebase Auth + Firestore user data (final secure version)
 
 /* =======================
    FIREBASE CONFIGURATION
    ======================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, serverTimestamp,
   getDocs, onSnapshot
@@ -19,276 +23,213 @@ const firebaseConfig = {
   measurementId: "G-TC7XHSSCBX"
 };
 
-let db = null;
-try {
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  console.info("✅ Firebase initialized successfully");
-} catch (err) {
-  console.warn("⚠️ Firebase init failed (offline mode)", err);
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+console.info("✅ Firebase initialized with Auth & Firestore");
 
 /* =======================
    HELPERS
    ======================= */
+const q = (s) => document.querySelector(s);
 const escapeHtml = (text = '') => {
   const d = document.createElement('div');
   d.textContent = text;
   return d.innerHTML;
 };
-const q = (s) => document.querySelector(s);
 
 /* =======================
-   THEME TOGGLE (stable)
+   THEME TOGGLE
    ======================= */
 document.addEventListener("DOMContentLoaded", () => {
-  const themeToggle = document.querySelector("#theme-toggle");
-  const applyTheme = (theme) => {
-    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+  const toggle = q("#theme-toggle");
+  const applyTheme = (t) => {
+    if (t === "light") document.documentElement.setAttribute("data-theme", "light");
     else document.documentElement.removeAttribute("data-theme");
   };
-
   let theme = localStorage.getItem("theme") || "dark";
   applyTheme(theme);
-  if (themeToggle) {
-    themeToggle.textContent = theme === "light" ? "🌞" : "🌙";
-    themeToggle.addEventListener("click", () => {
+  if (toggle) {
+    toggle.textContent = theme === "light" ? "🌞" : "🌙";
+    toggle.addEventListener("click", () => {
       theme = theme === "light" ? "dark" : "light";
-      applyTheme(theme);
       localStorage.setItem("theme", theme);
-      themeToggle.textContent = theme === "light" ? "🌞" : "🌙";
+      applyTheme(theme);
+      toggle.textContent = theme === "light" ? "🌞" : "🌙";
     });
   }
 });
 
 /* =======================
-   USER AUTH (local + uid)
+   AUTH SYSTEM (Sign up / Sign in / Logout)
    ======================= */
-const USER_KEY = "nk-user";
-function getUser() {
-  try { return JSON.parse(localStorage.getItem(USER_KEY) || "{}"); }
-  catch { return {}; }
-}
-function saveUser(u) { localStorage.setItem(USER_KEY, JSON.stringify(u)); }
+const signupForm = q("#signup-form");
+const loginForm = q("#login-form");
+const logoutBtn = q("#logout-btn");
 
-(function showUserBrand() {
-  const u = getUser();
-  if (u?.name) {
-    document.querySelectorAll(".brand").forEach(el => {
-      el.innerHTML = `NK<span>NL</span> — ${escapeHtml(u.name)}`;
-    });
-  }
-})();
+if (signupForm) {
+  signupForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const email = q("#signup-email").value.trim();
+    const password = q("#signup-password").value.trim();
+    const name = q("#signup-name").value.trim();
+
+    if (!email || !password || !name) return alert("Vui lòng nhập đầy đủ thông tin.");
+
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+      alert("Đăng ký thành công!");
+      localStorage.setItem("nk-user-name", name);
+      window.location.href = "analytics.html";
+    } catch (err) {
+      console.error(err);
+      alert("❌ Lỗi đăng ký: " + err.message);
+    }
+  });
+}
+
+if (loginForm) {
+  loginForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const email = q("#login-email").value.trim();
+    const password = q("#login-password").value.trim();
+
+    if (!email || !password) return alert("Nhập email và mật khẩu!");
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      alert("Đăng nhập thành công!");
+      window.location.href = "analytics.html";
+    } catch (err) {
+      alert("❌ Lỗi đăng nhập: " + err.message);
+    }
+  });
+}
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    alert("Đã đăng xuất!");
+    window.location.href = "login.html";
+  });
+}
 
 /* =======================
-   JOURNAL DATA (per-user Firestore)
+   FIRESTORE JOURNAL (Per user)
    ======================= */
 let entries = [];
 let chart = null;
 const journalList = q("#journal-list");
 const journalForm = q("#journal-form");
 
-/* ----- Firestore CRUD ----- */
-async function fetchEntriesFromFirestore() {
-  const user = getUser();
-  if (!db || !user?.uid) return [];
+async function fetchEntries(uid) {
   try {
-    const colRef = collection(db, "users", user.uid, "journalEntries");
+    const colRef = collection(db, "users", uid, "journalEntries");
     const qref = query(colRef, orderBy("createdAt", "desc"));
     const snap = await getDocs(qref);
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
-    console.error("❌ fetchEntriesFromFirestore failed:", err);
+    console.error("❌ Fetch error:", err);
     return [];
   }
 }
 
-async function addEntryToFirestore(entry) {
-  const user = getUser();
-  if (!db || !user?.uid) return null;
+async function addEntry(uid, entry) {
   try {
-    const colRef = collection(db, "users", user.uid, "journalEntries");
-    const docRef = await addDoc(colRef, { ...entry, createdAt: serverTimestamp() });
-    return docRef.id;
+    const colRef = collection(db, "users", uid, "journalEntries");
+    await addDoc(colRef, { ...entry, createdAt: serverTimestamp() });
   } catch (err) {
-    console.error("❌ addEntryToFirestore failed:", err);
-    return null;
+    console.error("❌ Add entry failed:", err);
   }
 }
 
-/* ----- Initialization ----- */
-document.addEventListener("DOMContentLoaded", async () => {
-  try { entries = JSON.parse(localStorage.getItem("journalEntries") || "[]"); }
-  catch { entries = []; }
-
-  renderEntries();
-  updateChart();
-
-  const user = getUser();
-  if (db && user?.uid) {
-    const remote = await fetchEntriesFromFirestore();
-    if (remote?.length) {
-      entries = remote.map(r => ({
-        date: r.date || (r.createdAt?.toDate ? r.createdAt.toDate().toISOString().slice(0, 10) : ""),
-        goal: r.goal || "",
-        activities: r.activities || "",
-        rating: typeof r.rating === "number" ? r.rating : parseInt(r.rating || 0, 10)
-      }));
-      localStorage.setItem("journalEntries", JSON.stringify(entries));
-      renderEntries();
-      updateChart();
-    }
-
-    // Realtime update listener
-    try {
-      const colRef = collection(db, "users", user.uid, "journalEntries");
-      const qref = query(colRef, orderBy("createdAt", "desc"));
-      onSnapshot(qref, snap => {
-        entries = snap.docs.map(d => d.data());
-        localStorage.setItem("journalEntries", JSON.stringify(entries));
-        renderEntries();
-        updateChart();
-      });
-    } catch (err) {
-      console.warn("⚠️ Realtime listener error:", err);
-    }
-  }
-});
-
-/* ----- Submit Form ----- */
-if (journalForm) {
-  journalForm.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const date = q("#date").value;
-    const goal = q("#goal").value.trim();
-    const activities = q("#activities").value.trim();
-    const rating = Number(q("#rating").value || 0);
-
-    if (!date || !goal || !rating) {
-      alert("Vui lòng nhập ngày, mục tiêu và đánh giá (1-10).");
-      return;
-    }
-
-    const entry = { date, goal, activities, rating };
-    entries.unshift(entry);
-    entries = entries.slice(0, 200);
-    localStorage.setItem("journalEntries", JSON.stringify(entries));
-    renderEntries();
-    updateChart();
-    journalForm.reset();
-
-    const id = await addEntryToFirestore(entry);
-    if (!id) console.warn("⚠️ Lưu Firestore thất bại, dữ liệu chỉ ở local.");
-  });
-}
-
-/* ----- Render UI ----- */
+/* =======================
+   JOURNAL LOGIC (Render + Chart)
+   ======================= */
 function renderEntries() {
   if (!journalList) return;
-  if (!entries?.length) {
+  if (!entries.length) {
     journalList.innerHTML = `<li class="muted">Chưa có nhật ký nào — hãy thêm ngay!</li>`;
     return;
   }
   journalList.innerHTML = entries.slice(0, 10).map(e => `
     <li>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;">
         <strong>${escapeHtml(e.date)}</strong>
         <span style="font-weight:700;color:var(--accent)">
-          ${escapeHtml("⭐ " + (e.rating || 0) + "/10")}
+          ⭐ ${(e.rating || 0)}/10
         </span>
       </div>
-      <div style="font-weight:700">${escapeHtml(e.goal)}</div>
-      <div style="color:var(--muted);margin-top:6px">
-        ${escapeHtml(e.activities || "Không ghi")}
-      </div>
-    </li>`).join("");
+      <div><b>${escapeHtml(e.goal)}</b></div>
+      <div style="color:var(--muted)">${escapeHtml(e.activities || 'Không ghi')}</div>
+    </li>
+  `).join("");
 }
 
-/* ----- Chart.js progress ----- */
 function updateChart() {
-  try {
-    const ctx = document.getElementById("progressChart");
-    if (!ctx || typeof Chart === "undefined") return;
+  const ctx = document.getElementById("progressChart");
+  if (!ctx || typeof Chart === "undefined") return;
+  const labels = entries.map(e => e.date).reverse();
+  const data = entries.map(e => e.rating).reverse();
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Mức tiến bộ",
+        data,
+        borderColor: "rgba(79,70,229,1)",
+        backgroundColor: "rgba(79,70,229,0.15)",
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: { scales: { y: { beginAtZero: true, max: 10 } } }
+  });
+}
 
-    const labels = entries.map(e => e.date).reverse();
-    const data = entries.map(e => e.rating).reverse();
+/* =======================
+   LISTEN AUTH STATE
+   ======================= */
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log("🔑 Logged in as:", user.email);
+    const name = localStorage.getItem("nk-user-name") || user.email.split("@")[0];
+    document.querySelectorAll(".brand").forEach(el =>
+      el.innerHTML = `NK<span>NL</span> — ${name}`
+    );
 
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Mức tiến bộ",
-          data,
-          tension: 0.3,
-          fill: true,
-          borderWidth: 2,
-          pointRadius: 3,
-          backgroundColor: "rgba(79,70,229,0.12)",
-          borderColor: "rgba(79,70,229,1)"
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true, max: 10 } }
-      }
-    });
-  } catch (err) {
-    console.warn("⚠️ updateChart error:", err);
+    entries = await fetchEntries(user.uid);
+    renderEntries();
+    updateChart();
+
+    if (journalForm) {
+      journalForm.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const date = q("#date").value;
+        const goal = q("#goal").value.trim();
+        const activities = q("#activities").value.trim();
+        const rating = Number(q("#rating").value || 0);
+
+        if (!date || !goal || !rating) return alert("Vui lòng nhập đủ thông tin.");
+        const entry = { date, goal, activities, rating };
+        entries.unshift(entry);
+        renderEntries();
+        updateChart();
+        journalForm.reset();
+        await addEntry(user.uid, entry);
+      });
+    }
+
+  } else {
+    console.log("🚪 Chưa đăng nhập.");
+    if (window.location.pathname.endsWith("analytics.html")) {
+      window.location.href = "login.html";
+    }
   }
-}
+});
 
-/* =======================
-   CONTACT FORM
-   ======================= */
-const contactForm = q("#contact-form");
-if (contactForm) {
-  contactForm.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const name = q("#name").value.trim();
-    const email = q("#email").value.trim();
-    const message = q("#message").value.trim();
-    if (!name || !email || !message) {
-      alert("Vui lòng nhập đầy đủ thông tin.");
-      return;
-    }
-
-    const successBox = q("#contact-success");
-    if (successBox) successBox.classList.remove("hidden");
-    contactForm.reset();
-
-    const user = getUser();
-    if (db && user?.uid) {
-      try {
-        await addDoc(collection(db, "users", user.uid, "contacts"), {
-          name, email, message, createdAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.error("❌ save contact failed:", err);
-      }
-    }
-    setTimeout(() => successBox && successBox.classList.add("hidden"), 3000);
-  });
-}
-
-/* =======================
-   LOGIN FLOW
-   ======================= */
-const loginForm = q("#login-form");
-if (loginForm) {
-  loginForm.addEventListener("submit", (ev) => {
-    ev.preventDefault();
-    const name = q("#login-username").value.trim();
-    const pass = q("#login-password").value.trim();
-    if (!name || !pass) return alert("Vui lòng nhập đầy đủ.");
-
-    // Tạo UID ngắn gọn duy nhất từ tên (base64)
-    const uid = btoa(name).replace(/=/g, "").slice(0, 10);
-    saveUser({ uid, name });
-    alert("Đăng nhập thành công!");
-    window.location.href = "analytics.html";
-  });
-}
-
-console.log("🔥 main.js loaded successfully (final build)");
+console.log("🔥 NK-NL App with Firebase Auth loaded successfully!");
