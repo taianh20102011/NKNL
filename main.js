@@ -221,22 +221,27 @@ document.addEventListener("click", (e) => {
   }
 });
 
-const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // Dán key ở đây
+const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // 🔑 Dán key thật của bạn vào
 
 const analyzeBtn = document.getElementById("analyze-btn");
 const aiBox = document.getElementById("ai-analysis");
 
 if (analyzeBtn) {
   analyzeBtn.addEventListener("click", async () => {
-    aiBox.innerHTML = "🤔 Đang phân tích bằng Gemini...";
+    aiBox.innerHTML = "🤖 Đang gửi dữ liệu cho Gemini...";
 
     const journalList = document.getElementById("journal-list");
     const items = Array.from(journalList.querySelectorAll("li"));
+    if (items.length === 0) {
+      aiBox.innerHTML = "⚠️ Chưa có dữ liệu để phân tích.";
+      return;
+    }
+
     const summary = items.map(li => li.textContent).join("\n");
 
     try {
       const res = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -244,26 +249,38 @@ if (analyzeBtn) {
             contents: [
               {
                 parts: [
-                  { text: "Phân tích dữ liệu biểu đồ năng lực cá nhân:\n" + summary }
-                ]
-              }
-            ]
-          })
+                  {
+                    text:
+                      "Dưới đây là nhật ký năng lực cá nhân:\n" +
+                      summary +
+                      "\n\n→ Hãy phân tích xu hướng điểm số, đánh giá tiến bộ và gợi ý cải thiện ngắn gọn bằng tiếng Việt."
+                  },
+                ],
+              },
+            ],
+          }),
         }
       );
 
       const data = await res.json();
-      const text =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Không nhận được phản hồi từ Gemini.";
 
-      aiBox.innerHTML = `<strong>Kết quả AI:</strong><br>${text}`;
+      const output =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "Không có phản hồi từ AI.";
+
+      aiBox.innerHTML = `
+        <div style="background:#f9fafb;padding:10px;border-radius:8px;">
+          <strong>🧠 Phân tích từ Gemini:</strong><br>
+          ${output.replace(/\n/g, "<br>")}
+        </div>`;
     } catch (err) {
-      console.error("Gemini error:", err);
-      aiBox.innerHTML = `❌ Lỗi AI: ${err.message}`;
+      console.error("AI fetch error:", err);
+      aiBox.innerHTML = `❌ Lỗi: ${err.message}`;
     }
   });
 }
+
+
 
 
 
