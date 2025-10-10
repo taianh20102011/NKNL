@@ -1,38 +1,27 @@
 // main.js — NKNL 2025: Firebase Auth + Firestore + Chart + Theme
 // --------------------------------------------------------------
 
-/* =======================
-   IMPORT FIREBASE MODULES
-   ======================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc, query, orderBy,
-  serverTimestamp, getDocs, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-/* =======================
-   FIREBASE CONFIG
-   ======================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
-  authDomain: "nknl-d7b54.firebaseapp.com",
-  projectId: "nknl-d7b54",
-  storageBucket: "nknl-d7b54.appspot.com", // ✅ Sửa lại đúng domain storage
-  messagingSenderId: "792185587281",
-  appId: "1:792185587281:web:585e98f2f87d7d59031a70",
-  measurementId: "G-TC7XHSSCBX"
-};
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+    authDomain: "nknl-d7b54.firebaseapp.com",
+    projectId: "nknl-d7b54",
+    storageBucket: "nknl-d7b54.firebasestorage.app",
+    messagingSenderId: "792185587281",
+    appId: "1:792185587281:web:585e98f2f87d7d59031a70",
+    measurementId: "G-TC7XHSSCBX"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 
 console.info("✅ Firebase initialized");
 
@@ -254,5 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.log("🔥 NK-NL main.js loaded successfully");
+
 
 
