@@ -204,23 +204,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 // 🌟 Navbar toggle for mobile
-document.addEventListener("DOMContentLoaded", () => {
-  const toggle = document.getElementById("nav-toggle");
-  const menu = document.getElementById("nav-menu");
+// Hamburger toggle
+const navToggle = document.getElementById("nav-toggle");
+const navMenu = document.getElementById("nav-menu");
 
-  if (toggle && menu) {
-    toggle.addEventListener("click", () => {
-      const open = menu.classList.toggle("mobile-open");
-      toggle.textContent = open ? "✕" : "☰";
-    });
+if (navToggle && navMenu) {
+  navToggle.addEventListener("click", () => {
+    navMenu.classList.toggle("mobile-open");
+  });
+}
 
-    // Đóng menu khi click ngoài khu vực menu
-    document.addEventListener("click", (e) => {
-      if (!menu.contains(e.target) && e.target !== toggle && menu.classList.contains("mobile-open")) {
-        menu.classList.remove("mobile-open");
-        toggle.textContent = "☰";
-      }
-    });
+// Ẩn menu khi click bên ngoài (tuỳ chọn)
+document.addEventListener("click", (e) => {
+  if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+    navMenu.classList.remove("mobile-open");
   }
 });
+
 
