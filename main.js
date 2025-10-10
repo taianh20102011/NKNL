@@ -22,7 +22,7 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-// ✅ FIREBASE CONFIG
+// ✅ FIREBASE CONFIG (chỉ khai báo 1 lần duy nhất)
 const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
   authDomain: "nknl-d7b54.firebaseapp.com",
@@ -44,8 +44,8 @@ console.info("✅ Firebase initialized");
 // HELPERS
 // =======================
 const q = (s) => document.querySelector(s);
-const escapeHtml = (text = '') => {
-  const div = document.createElement('div');
+const escapeHtml = (text = "") => {
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 };
@@ -86,6 +86,7 @@ if (registerForm) {
     const password = q("#register-password").value.trim();
     const name = q("#register-name").value.trim();
     if (!email || !password || !name) return alert("Nhập đầy đủ thông tin!");
+
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       localStorage.setItem("nk-user-name", name);
@@ -110,7 +111,9 @@ if (loginForm) {
       window.location.href = "analytics.html";
     } catch (err) {
       console.error("❌ Lỗi đăng nhập:", err);
-      alert("Lỗi đăng nhập: " + err.message);
+      if (err.code === "auth/invalid-credential" || err.code === "auth/invalid-email")
+        alert("❌ Email hoặc mật khẩu không hợp lệ!");
+      else alert("Đăng nhập thất bại: " + err.message);
     }
   });
 }
@@ -135,7 +138,7 @@ async function fetchEntries(user) {
     const colRef = collection(db, "users", user.uid, "journalEntries");
     const qref = query(colRef, orderBy("createdAt", "desc"));
     const snap = await getDocs(qref);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (err) {
     console.error("❌ fetchEntries failed:", err);
     return [];
@@ -159,7 +162,10 @@ function renderEntries() {
     list.innerHTML = `<li class="muted">Chưa có nhật ký nào — hãy thêm ngay!</li>`;
     return;
   }
-  list.innerHTML = entries.slice(0, 10).map(e => `
+  list.innerHTML = entries
+    .slice(0, 10)
+    .map(
+      (e) => `
     <li>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
         <strong>${escapeHtml(e.date)}</strong>
@@ -167,34 +173,38 @@ function renderEntries() {
       </div>
       <div style="font-weight:700">${escapeHtml(e.goal)}</div>
       <div style="color:var(--muted);margin-top:4px">${escapeHtml(e.activities || "Không ghi")}</div>
-    </li>`).join("");
+    </li>`
+    )
+    .join("");
 }
 
 function updateChart() {
   const ctx = document.getElementById("progressChart");
   if (!ctx || typeof Chart === "undefined") return;
-  const labels = entries.map(e => e.date).reverse();
-  const data = entries.map(e => e.rating).reverse();
+  const labels = entries.map((e) => e.date).reverse();
+  const data = entries.map((e) => e.rating).reverse();
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
-      datasets: [{
-        label: "Mức tiến bộ",
-        data,
-        tension: 0.3,
-        borderWidth: 2,
-        pointRadius: 3,
-        fill: true,
-        backgroundColor: "rgba(79,70,229,0.12)",
-        borderColor: "rgba(79,70,229,1)"
-      }]
+      datasets: [
+        {
+          label: "Mức tiến bộ",
+          data,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 3,
+          fill: true,
+          backgroundColor: "rgba(79,70,229,0.12)",
+          borderColor: "rgba(79,70,229,1)",
+        },
+      ],
     },
     options: {
       responsive: true,
-      scales: { y: { beginAtZero: true, max: 10 } }
-    }
+      scales: { y: { beginAtZero: true, max: 10 } },
+    },
   });
 }
 
@@ -202,8 +212,10 @@ function updateChart() {
 // ON AUTH STATE CHANGE
 // =======================
 onAuthStateChanged(auth, async (user) => {
-  const name = localStorage.getItem("nk-user-name") || (user?.email || "");
-  document.querySelectorAll(".brand").forEach(el => el.innerHTML = `NK<span>NL</span> — ${escapeHtml(name)}`);
+  const name = localStorage.getItem("nk-user-name") || user?.email || "";
+  document.querySelectorAll(".brand").forEach(
+    (el) => (el.innerHTML = `NK<span>NL</span> — ${escapeHtml(name)}`)
+  );
 
   if (!user) {
     if (window.location.pathname.endsWith("analytics.html")) {
@@ -212,7 +224,6 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // Load entries
   entries = await fetchEntries(user);
   renderEntries();
   updateChart();
@@ -221,8 +232,8 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const colRef = collection(db, "users", user.uid, "journalEntries");
     const qref = query(colRef, orderBy("createdAt", "desc"));
-    onSnapshot(qref, snap => {
-      entries = snap.docs.map(d => d.data());
+    onSnapshot(qref, (snap) => {
+      entries = snap.docs.map((d) => d.data());
       renderEntries();
       updateChart();
     });
@@ -230,7 +241,6 @@ onAuthStateChanged(auth, async (user) => {
     console.warn("Realtime error:", err);
   }
 
-  // Add entry handler
   const form = q("#journal-form");
   if (form) {
     form.addEventListener("submit", async (ev) => {
