@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nhật ký — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="nav">
+    <div class="container nav-inner">
+
+    <div class="nav-inner">
+      <a href="index.html" class="brand">NK<span>NL</span></a>
+      <div class="hamburger" id="nav-toggle">☰</div>
+      <div class="menu" id="nav-menu">
+        <a href="features.html">Tính năng</a>
+        <a href="journal.html">Start</a>
+        <a href="about.html">Giới thiệu</a>
+        <a href="login.html" id="logout-btn">Đăng xuất</a>
+      </div>
+    </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
+    </div>
+  </header> 
+
+  <main class="page">
+    <div class="container">
+      <h1>📔 Nhật ký phát triển năng lực</h1>
+
+      <form id="journal-form" class="journal-form">
+        <input type="date" id="date" required>
+        <input type="text" id="goal" placeholder="🎯 Mục tiêu hôm nay" required>
+        <textarea id="activities" rows="3" placeholder="💪 Hoạt động hôm nay"></textarea>
+        <input type="number" id="rating" min="1" max="10" placeholder="⭐ Đánh giá (1-10)" required>
+        <button type="submit" class="btn">💾 Lưu nhật ký</button>
+      </form>
+
+      <section class="chart-section">
+        <h2>📊 Biểu đồ tiến bộ</h2>
+        <canvas id="progressChart"></canvas>
+      </section>
+
+      <section class="log-list">
+        <h2>📝 Nhật ký gần đây</h2>
+        <ul id="journal-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">© 2025 Nhật ký Năng lực</footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
