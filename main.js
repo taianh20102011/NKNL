@@ -221,14 +221,43 @@ document.addEventListener("click", (e) => {
   }
 });
 
-async function analyzeChartWithAI(summary) {
-  const res = await fetch("/api/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ summary })
+const analyzeBtn = document.getElementById("analyze-btn");
+const aiBox = document.getElementById("ai-analysis");
+
+if (analyzeBtn) {
+  analyzeBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Vui lòng đăng nhập!");
+      return;
+    }
+
+    aiBox.innerHTML = "🤔 Đang phân tích...";
+
+    // Tạo summary từ logs hiện có
+    const journalList = document.getElementById("journal-list");
+    const items = Array.from(journalList.querySelectorAll("li"));
+    const summary = items.map(li => li.textContent).join("\n");
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ summary })
+      });
+      const data = await res.json();
+      if (data.result) {
+        aiBox.innerHTML = `<strong>Kết quả AI:</strong><br>${data.result}`;
+      } else {
+        aiBox.innerHTML = "❌ Không nhận được phản hồi AI.";
+      }
+    } catch (err) {
+      console.error("AI fetch error:", err);
+      aiBox.innerHTML = `Lỗi AI: ${err.message}`;
+    }
   });
-  const data = await res.json();
-  alert("Kết quả phân tích AI:\n" + data.result);
 }
+
+
 
 
