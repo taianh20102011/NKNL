@@ -1,39 +1,38 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đăng nhập | Nhật ký năng lực</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="nav">
     <div class="container nav-inner">
-
-<div class="nav-inner">
       <a href="index.html" class="brand">NK<span>NL</span></a>
-  <div class="hamburger" id="nav-toggle">☰</div>
-  <div class="menu" id="nav-menu">
-    <a href="#features">Tính năng</a>
-    <a href="#demo">Demo</a>
-    <a href="#about">Giới thiệu</a>
-    <a href="#contact">Liên hệ</a>
-    <a href="login.html">Login</a>
-  </div>
-</div>
-
+      <div class="hamburger" id="nav-toggle">☰</div>
+      <div class="menu" id="nav-menu">
+        <a href="#features">Tính năng</a>
+        <a href="#demo">Demo</a>
+        <a href="#about">Giới thiệu</a>
+        <a href="#contact">Liên hệ</a>
+        <a href="login.html" class="active">Login</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
     </div>
   </header>
-  <h2>🔑 Đăng nhập</h2>
-  <form id="login-form">
-    <input id="login-email" type="email" placeholder="Email" required />
-    <input id="login-password" type="password" placeholder="Mật khẩu" required />
-    <button type="submit">Đăng nhập</button>
-  </form>
-  <p>Chưa có tài khoản? <a href="signup.html">Đăng ký</a></p>
+
+  <main class="auth-container">
+    <h2>🔑 Đăng nhập</h2>
+    <form id="login-form">
+      <input id="login-email" type="email" placeholder="Email" required />
+      <input id="login-password" type="password" placeholder="Mật khẩu" required />
+      <button type="submit">Đăng nhập</button>
+    </form>
+    <p>Chưa có tài khoản? <a href="signup.html">Đăng ký</a></p>
+  </main>
+
+  <!-- Không thêm script Firebase riêng -->
   <script type="module" src="main.js"></script>
 </body>
 </html>
-
-
