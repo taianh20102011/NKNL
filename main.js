@@ -134,12 +134,19 @@ if (loginForm) {
       localStorage.setItem("nk-user-pass", password);
       alert("✅ Đăng nhập thành công!");
       window.location.href = "analytics.html";
-    } catch (err) {
-      console.error("❌ Lỗi đăng nhập:", err);
-      if (err.code === "auth/invalid-credential" || err.code === "auth/invalid-email")
-        alert("❌ Email hoặc mật khẩu không hợp lệ!");
-      else alert("Đăng nhập thất bại: " + err.message);
-    }
+} catch (err) {
+  console.error("❌ Firebase login error object:", err);
+  console.error("err.code:", err?.code);
+  console.error("err.message:", err?.message);
+  console.error("err.customData:", err?.customData);
+  // Tùy chọn: show user-friendly message
+  let friendly = "Đăng nhập thất bại";
+  if (err?.code === "auth/invalid-credential" || err?.code === "auth/invalid-email") friendly = "Email hoặc mật khẩu không đúng.";
+  else if (err?.code === "auth/user-not-found") friendly = "Tài khoản chưa được tạo.";
+  else if (err?.code === "auth/too-many-requests") friendly = "Thử lại sau (quá nhiều lần).";
+  alert(`❌ ${friendly}\n(${err?.code || "no_code"})`);
+}
+
   });
 }
 
@@ -322,3 +329,4 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.log("🔥 NK-NL main.js loaded successfully");
+
