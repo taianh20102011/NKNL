@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập | Nhật ký năng lực</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Đăng nhập — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="nav">
@@ -21,20 +21,19 @@
       <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
     </div>
   </header>
+  <div class="auth-page">
+    <div class="auth-box">
+      <h1>🔑 Đăng nhập / Đăng ký</h1>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Mật khẩu" required>
+      <button id="login-btn" class="btn-primary">Đăng nhập</button>
+      <button id="signup-btn" class="btn-secondary">Đăng ký</button>
+      <p id="auth-message"></p>
+    </div>
+  </div>
 
-  <main class="auth-container">
-    <h2>🔑 Đăng nhập</h2>
-<form id="login-form">
-  <input id="login-email" type="email" placeholder="Email" required>
-  <input id="login-password" type="password" placeholder="Mật khẩu" required>
-  <button type="submit">Đăng nhập</button>
-</form>
-
-    <p>Chưa có tài khoản? <a href="signup.html">Đăng ký</a></p>
-  </main>
-
-  <!-- Không thêm script Firebase riêng -->
   <script type="module" src="main.js"></script>
 </body>
 </html>
+
 
