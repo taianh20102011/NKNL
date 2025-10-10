@@ -221,8 +221,9 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ====== GEMINI AI PHÂN TÍCH BIỂU ĐỒ ======
-const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // 👉 Dán API key tại đây
+
+
+const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // ⚠️ Thay bằng key của bạn
 
 const analyzeBtn = document.getElementById("analyze-btn");
 const aiBox = document.getElementById("ai-analysis");
@@ -242,7 +243,7 @@ if (analyzeBtn) {
 
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -252,14 +253,13 @@ if (analyzeBtn) {
                 parts: [
                   {
                     text:
-                      "Dưới đây là các nhật ký năng lực:\n" +
-                      summary +
-                      "\n\n→ Hãy phân tích xu hướng điểm số, đánh giá tiến bộ và gợi ý ngắn gọn bằng tiếng Việt."
-                  }
-                ]
-              }
-            ]
-          })
+                      "Phân tích các bản nhật ký năng lực sau và đánh giá xu hướng phát triển của người dùng bằng tiếng Việt:\n\n" +
+                      summary,
+                  },
+                ],
+              },
+            ],
+          }),
         }
       );
 
@@ -267,7 +267,7 @@ if (analyzeBtn) {
 
       const output =
         data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Không có phản hồi từ AI.";
+        "⚠️ Không có phản hồi từ AI.";
 
       aiBox.innerHTML = `
         <div style="background:#f9fafb;padding:10px;border-radius:8px;">
@@ -280,6 +280,8 @@ if (analyzeBtn) {
     }
   });
 }
+
+
 
 
 
