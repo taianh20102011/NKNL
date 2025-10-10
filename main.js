@@ -223,63 +223,53 @@ document.addEventListener("click", (e) => {
 
 
 
-const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // ⚠️ Thay bằng key của bạn
+// ============================
+// 🧠 AI OFFLINE PHÂN TÍCH BIỂU ĐỒ
+// ============================
 
+function analyzeOffline(chartData) {
+  if (!chartData || chartData.length === 0) 
+    return "⚠️ Chưa có dữ liệu để phân tích.";
+
+  const avg = chartData.reduce((a, b) => a + b, 0) / chartData.length;
+  const trend = chartData[chartData.length - 1] - chartData[0];
+  const max = Math.max(...chartData);
+  const min = Math.min(...chartData);
+
+  let message = `📊 **Phân tích biểu đồ năng lực:**\n`;
+  message += `• Trung bình: ${avg.toFixed(2)}\n`;
+  message += `• Cao nhất: ${max}\n`;
+  message += `• Thấp nhất: ${min}\n`;
+
+  if (trend > 0) message += "📈 Xu hướng: Tăng dần, thể hiện sự tiến bộ ổn định.\n";
+  else if (trend < 0) message += "📉 Xu hướng: Giảm nhẹ, nên xem lại thói quen học.\n";
+  else message += "➖ Xu hướng: Ổn định, duy trì tốt phong độ hiện tại.\n";
+
+  if (avg >= 8) message += "💪 Hiệu suất rất cao, bạn đang phát triển mạnh!";
+  else if (avg >= 5) message += "🙂 Hiệu suất trung bình khá, cố gắng thêm!";
+  else message += "😕 Hiệu suất thấp, cần điều chỉnh phương pháp học.";
+
+  return message;
+}
+
+// Gán nút "Phân tích biểu đồ"
 const analyzeBtn = document.getElementById("analyze-btn");
-const aiBox = document.getElementById("ai-analysis");
-
 if (analyzeBtn) {
-  analyzeBtn.addEventListener("click", async () => {
-    aiBox.innerHTML = "🤖 Đang gửi dữ liệu cho Gemini...";
-
-    const journalList = document.getElementById("journal-list");
-    const items = Array.from(journalList.querySelectorAll("li"));
-    if (items.length === 0) {
-      aiBox.innerHTML = "⚠️ Không có dữ liệu để phân tích!";
+  analyzeBtn.addEventListener("click", () => {
+    if (!progressChartInstance) {
+      alert("Chưa có dữ liệu biểu đồ!");
       return;
     }
 
-    const summary = items.map(li => li.textContent).join("\n");
+    const data = progressChartInstance.data.datasets[0].data;
+    const analysis = analyzeOffline(data);
 
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text:
-                      "Phân tích các bản nhật ký năng lực sau và đánh giá xu hướng phát triển của người dùng bằng tiếng Việt:\n\n" +
-                      summary,
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      const output =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "⚠️ Không có phản hồi từ AI.";
-
-      aiBox.innerHTML = `
-        <div style="background:#f9fafb;padding:10px;border-radius:8px;">
-          <strong>🧠 Phân tích từ Gemini:</strong><br>
-          ${output.replace(/\n/g, "<br>")}
-        </div>`;
-    } catch (err) {
-      console.error("AI fetch error:", err);
-      aiBox.innerHTML = `❌ Lỗi: ${err.message}`;
-    }
+    const resultBox = document.getElementById("ai-result");
+    resultBox.innerText = analysis;
   });
 }
+
+
 
 
 
