@@ -530,4 +530,49 @@ html, body, * {
   display: none;
 }
 
+}
+.btn, .btn-primary, .btn-secondary {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: 0.3s;
+}
+.btn:hover, .btn-primary:hover, .btn-secondary:hover {
+  background: #3730a3;
+}
+
+.auth-page {
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+.auth-box {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  width: 300px;
+}
+.auth-box input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.footer {
+  text-align: center;
+  padding: 20px;
+  background: #4f46e5;
+  color: white;
+}
 
