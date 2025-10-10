@@ -1,7 +1,10 @@
-// /api/analyze.js
+// api/analyze.js
 export default async function handler(req, res) {
   try {
     const { summary } = await req.json();
+    if (!summary) {
+      return res.status(400).json({ error: "Missing summary" });
+    }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -12,15 +15,17 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Bạn là AI chuyên phân tích biểu đồ năng lực cá nhân." },
-          { role: "user", content: `Phân tích dữ liệu biểu đồ năng lực:\n${summary}` }
+          { role: "system", content: "Bạn là AI chuyên phân tích dữ liệu biểu đồ năng lực cá nhân." },
+          { role: "user", content: `Phân tích dữ liệu:\n${summary}` }
         ]
       })
     });
 
     const data = await response.json();
-    res.status(200).json({ result: data.choices[0].message.content });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const result = data.choices?.[0]?.message?.content || "Không phân tích được dữ liệu.";
+    res.status(200).json({ result });
+  } catch (err) {
+    console.error("Error in analyze API:", err);
+    res.status(500).json({ error: err.message });
   }
 }
