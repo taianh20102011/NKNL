@@ -24,7 +24,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
   authDomain: "nknl-d7b54.firebaseapp.com",
   projectId: "nknl-d7b54",
-  storageBucket: "nknl-d7b54.firebasestorage.app",
+  storageBucket: "nknl-d7b54.appspot.com", // ✅ Sửa lại đúng domain storage
   messagingSenderId: "792185587281",
   appId: "1:792185587281:web:585e98f2f87d7d59031a70",
   measurementId: "G-TC7XHSSCBX"
@@ -254,4 +254,5 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.log("🔥 NK-NL main.js loaded successfully");
+
 
