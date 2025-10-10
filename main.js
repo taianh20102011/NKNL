@@ -1,31 +1,21 @@
-// main.js — NKNL 2025: Firebase Auth + Firestore + Chart + Theme + Auto SignIn
-// ---------------------------------------------------------------------------
+// =========================
+// NĂNG LỰC TRACKER (main.js)
+// Firebase + Auth + Firestore + Chart + AI Loading
+// =========================
 
-// ✅ IMPORTS
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+// ---- FIREBASE INIT ----
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  orderBy,
-  serverTimestamp,
-  onSnapshot,
-  doc,
-  setDoc,
-  getDoc,
+  getFirestore, collection, addDoc, getDocs, orderBy, query,
+  serverTimestamp, doc, setDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-// ✅ FIREBASE CONFIG
+// ---- CONFIG ----
 const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
   authDomain: "nknl-d7b54.firebaseapp.com",
@@ -36,134 +26,106 @@ const firebaseConfig = {
   measurementId: "G-TC7XHSSCBX",
 };
 
-// ✅ INIT
-const app = initializeApp(firebaseConfig);
+// ---- INIT ONCE ----
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
-console.info("✅ Firebase initialized");
+console.log("✅ Firebase ready!");
 
-// =======================
-// HELPERS
-// =======================
+// ---- HELPERS ----
 const q = (s) => document.querySelector(s);
-const escapeHtml = (text = "") => {
+const escapeHtml = (txt = "") => {
   const div = document.createElement("div");
-  div.textContent = text;
+  div.textContent = txt;
   return div.innerHTML;
 };
 
 // =======================
-// THEME SWITCHER
+// THEME TOGGLE
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = q("#theme-toggle");
-  const applyTheme = (theme) => {
-    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
-    else document.documentElement.removeAttribute("data-theme");
-  };
-  let currentTheme = localStorage.getItem("theme") || "dark";
-  applyTheme(currentTheme);
+  const applyTheme = (t) => document.documentElement.setAttribute("data-theme", t);
+  let theme = localStorage.getItem("theme") || "dark";
+  applyTheme(theme);
   if (themeToggle) {
-    themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
+    themeToggle.textContent = theme === "dark" ? "🌙" : "🌞";
     themeToggle.addEventListener("click", () => {
-      currentTheme = currentTheme === "light" ? "dark" : "light";
-      applyTheme(currentTheme);
-      localStorage.setItem("theme", currentTheme);
-      themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
+      theme = theme === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", theme);
+      applyTheme(theme);
+      themeToggle.textContent = theme === "dark" ? "🌙" : "🌞";
     });
   }
 });
 
 // =======================
-// AUTH: REGISTER / LOGIN / LOGOUT
+// AUTH
 // =======================
 const registerForm = q("#register-form");
 const loginForm = q("#login-form");
 const logoutBtn = q("#logout-btn");
 
-// --------------------
-// ✅ REGISTER
-// --------------------
+// ---- REGISTER ----
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = q("#register-email").value.trim();
-    const password = q("#register-password").value.trim();
     const name = q("#register-name").value.trim();
-    if (!email || !password || !name) return alert("Nhập đầy đủ thông tin!");
+    const email = q("#register-email").value.trim();
+    const pass = q("#register-password").value.trim();
+    if (!name || !email || !pass) return alert("Điền đủ thông tin!");
 
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-
-      // ✅ Lưu thông tin người dùng vào Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        name,
-        email,
-        createdAt: serverTimestamp(),
+      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+      await setDoc(doc(db, "users", userCred.user.uid), {
+        name, email, createdAt: serverTimestamp(),
       });
-
-      // ✅ Lưu tên và email vào localStorage (auto sign-in next time)
       localStorage.setItem("nk-user-name", name);
       localStorage.setItem("nk-user-email", email);
-      localStorage.setItem("nk-user-pass", password);
-
+      localStorage.setItem("nk-user-pass", pass);
       alert("✅ Đăng ký thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
-      console.error("❌ Lỗi đăng ký:", err);
+      console.error(err);
       alert("Lỗi đăng ký: " + err.message);
     }
   });
 }
 
-// --------------------
-// ✅ LOGIN
-// --------------------
+// ---- LOGIN ----
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = q("#login-email").value.trim();
-    const password = q("#login-password").value.trim();
-    if (!email || !password) return alert("Nhập email và mật khẩu!");
+    const pass = q("#login-password").value.trim();
+    if (!email || !pass) return alert("Điền đủ thông tin!");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, pass);
       localStorage.setItem("nk-user-email", email);
-      localStorage.setItem("nk-user-pass", password);
+      localStorage.setItem("nk-user-pass", pass);
       alert("✅ Đăng nhập thành công!");
       window.location.href = "analytics.html";
-} catch (err) {
-  console.error("❌ Firebase login error object:", err);
-  console.error("err.code:", err?.code);
-  console.error("err.message:", err?.message);
-  console.error("err.customData:", err?.customData);
-  // Tùy chọn: show user-friendly message
-  let friendly = "Đăng nhập thất bại";
-  if (err?.code === "auth/invalid-credential" || err?.code === "auth/invalid-email") friendly = "Email hoặc mật khẩu không đúng.";
-  else if (err?.code === "auth/user-not-found") friendly = "Tài khoản chưa được tạo.";
-  else if (err?.code === "auth/too-many-requests") friendly = "Thử lại sau (quá nhiều lần).";
-  alert(`❌ ${friendly}\n(${err?.code || "no_code"})`);
-}
-
+    } catch (err) {
+      console.error(err);
+      alert("❌ " + (err?.message || "Lỗi đăng nhập."));
+    }
   });
 }
 
-// --------------------
-// ✅ LOGOUT
-// --------------------
+// ---- LOGOUT ----
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     await signOut(auth);
-    localStorage.removeItem("nk-user-pass"); // xóa mật khẩu để tránh tự đăng nhập sau logout
+    localStorage.removeItem("nk-user-pass");
     alert("Đã đăng xuất!");
     window.location.href = "login.html";
   });
 }
 
 // =======================
-// AUTO LOGIN (Remember Me)
+// AUTO LOGIN
 // =======================
 window.addEventListener("DOMContentLoaded", async () => {
   const email = localStorage.getItem("nk-user-email");
@@ -171,162 +133,136 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (email && pass && !auth.currentUser) {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      console.info("🔁 Auto sign-in successful for:", email);
-    } catch (err) {
-      console.warn("Auto login failed:", err);
-      localStorage.removeItem("nk-user-pass"); // tránh loop login lỗi
+      console.log("🔁 Auto signed in:", email);
+    } catch {
+      localStorage.removeItem("nk-user-pass");
     }
   }
 });
 
 // =======================
-// JOURNAL SYSTEM
+// JOURNAL + CHART
 // =======================
 let entries = [];
 let chart = null;
 
-async function fetchEntries(user) {
-  if (!user) return [];
-  try {
-    const colRef = collection(db, "users", user.uid, "journalEntries");
-    const qref = query(colRef, orderBy("createdAt", "desc"));
-    const snap = await getDocs(qref);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  } catch (err) {
-    console.error("❌ fetchEntries failed:", err);
-    return [];
-  }
-}
-
-async function addEntry(user, entry) {
-  if (!user) return;
-  try {
-    const colRef = collection(db, "users", user.uid, "journalEntries");
-    await addDoc(colRef, { ...entry, createdAt: serverTimestamp() });
-  } catch (err) {
-    console.error("❌ addEntry failed:", err);
-  }
-}
-
 function renderEntries() {
   const list = q("#journal-list");
   if (!list) return;
-  if (!entries.length) {
-    list.innerHTML = `<li class="muted">Chưa có nhật ký nào — hãy thêm ngay!</li>`;
-    return;
-  }
-  list.innerHTML = entries
-    .slice(0, 10)
-    .map(
-      (e) => `
-    <li>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <strong>${escapeHtml(e.date)}</strong>
-        <span style="font-weight:700;color:var(--accent)">⭐ ${e.rating || 0}/10</span>
-      </div>
-      <div style="font-weight:700">${escapeHtml(e.goal)}</div>
-      <div style="color:var(--muted);margin-top:4px">${escapeHtml(
-        e.activities || "Không ghi"
-      )}</div>
-    </li>`
-    )
-    .join("");
+  list.innerHTML = entries.length
+    ? entries.slice(0, 10).map(e => `
+      <li>
+        <strong>${escapeHtml(e.date)}</strong> — ⭐ ${e.rating}/10<br>
+        <em>${escapeHtml(e.goal)}</em><br>
+        Hoạt động: ${escapeHtml(e.activities || "Không ghi")}
+      </li>`).join("")
+    : "<li>Chưa có dữ liệu</li>";
 }
 
 function updateChart() {
   const ctx = document.getElementById("progressChart");
   if (!ctx || typeof Chart === "undefined") return;
-  const labels = entries.map((e) => e.date).reverse();
-  const data = entries.map((e) => e.rating).reverse();
+  const labels = entries.map(e => e.date).reverse();
+  const data = entries.map(e => e.rating).reverse();
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Mức tiến bộ",
-          data,
-          tension: 0.3,
-          borderWidth: 2,
-          pointRadius: 3,
-          fill: true,
-          backgroundColor: "rgba(79,70,229,0.12)",
-          borderColor: "rgba(79,70,229,1)",
-        },
-      ],
+      datasets: [{
+        label: "Mức tiến bộ",
+        data,
+        borderColor: "#4f46e5",
+        backgroundColor: "rgba(99,102,241,0.2)",
+        fill: true,
+        tension: 0.3,
+      }],
     },
-    options: {
-      responsive: true,
-      scales: { y: { beginAtZero: true, max: 10 } },
-    },
+    options: { scales: { y: { beginAtZero: true, max: 10 } } },
   });
 }
 
 // =======================
-// ON AUTH STATE CHANGE
+// AI ANALYSIS (v2) — có hiệu ứng loading
+// =======================
+function createAILoadingAnimation(container) {
+  container.innerHTML = `
+    <div class="ai-loading">
+      <div class="spinner"></div>
+      <p>Đang phân tích dữ liệu bằng AI...</p>
+    </div>`;
+}
+
+async function analyzeAI(entries) {
+  const resultBox = q("#ai-result");
+  if (!resultBox) return;
+  createAILoadingAnimation(resultBox);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const avg = entries.reduce((a, b) => a + b.rating, 0) / entries.length;
+      const trend = avg > 6 ? "📈 Tiến bộ nhanh" : avg > 4 ? "📊 Ổn định" : "⚠️ Cần cố gắng hơn";
+      let advice = "Hãy tiếp tục kiên trì và thử thách bản thân với mục tiêu cao hơn!";
+      if (avg < 4) advice = "Tập trung vào một kỹ năng, luyện tập đều mỗi ngày.";
+      if (avg > 7) advice = "Hiệu suất tốt! Hãy thử mở rộng lĩnh vực khác để phát triển toàn diện.";
+
+      resultBox.innerHTML = `
+        <strong>📊 Phân tích tổng quát:</strong><br>
+        Điểm TB: <b>${avg.toFixed(2)}/10</b><br>
+        Xu hướng: ${trend}<br><br>
+        <strong>💡 Gợi ý học tập:</strong><br>${advice}`;
+      resolve();
+    }, 2000);
+  });
+}
+
+// =======================
+// ON AUTH CHANGE
 // =======================
 onAuthStateChanged(auth, async (user) => {
-  const name = localStorage.getItem("nk-user-name") || user?.email || "";
-  document.querySelectorAll(".brand").forEach(
-    (el) => (el.innerHTML = `NK<span>NL</span> — ${escapeHtml(name)}`)
-  );
-
   if (!user) {
-    if (window.location.pathname.endsWith("analytics.html")) {
+    if (window.location.pathname.includes("analytics.html")) {
       window.location.href = "login.html";
     }
     return;
   }
 
-  entries = await fetchEntries(user);
-  renderEntries();
-  updateChart();
+  // Gắn tên người dùng
+  const name = localStorage.getItem("nk-user-name") || user.email;
+  document.querySelectorAll(".brand").forEach(
+    (el) => (el.innerHTML = `NK<span>NL</span> — ${escapeHtml(name)}`)
+  );
 
-  // Realtime updates
-  try {
-    const colRef = collection(db, "users", user.uid, "journalEntries");
-    const qref = query(colRef, orderBy("createdAt", "desc"));
-    onSnapshot(qref, (snap) => {
-      entries = snap.docs.map((d) => d.data());
-      renderEntries();
-      updateChart();
-    });
-  } catch (err) {
-    console.warn("Realtime error:", err);
-  }
+  // Load dữ liệu nhật ký
+  const colRef = collection(db, "users", user.uid, "journalEntries");
+  onSnapshot(query(colRef, orderBy("createdAt", "desc")), (snap) => {
+    entries = snap.docs.map((d) => d.data());
+    renderEntries();
+    updateChart();
+  });
 
+  // Submit form nhật ký
   const form = q("#journal-form");
   if (form) {
-    form.addEventListener("submit", async (ev) => {
-      ev.preventDefault();
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
       const date = q("#date").value;
-      const goal = q("#goal").value.trim();
-      const activities = q("#activities").value.trim();
+      const goal = q("#goal").value;
+      const activities = q("#activities").value;
       const rating = Number(q("#rating").value || 0);
-      if (!date || !goal) return alert("Nhập đầy đủ ngày và mục tiêu!");
-      const entry = { date, goal, activities, rating };
-      entries.unshift(entry);
-      renderEntries();
-      updateChart();
+      if (!date || !goal) return alert("Nhập đủ thông tin!");
+      await addDoc(colRef, { date, goal, activities, rating, createdAt: serverTimestamp() });
       form.reset();
-      await addEntry(user, entry);
+    });
+  }
+
+  // Nút phân tích AI
+  const analyzeBtn = q("#analyze-btn");
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener("click", async () => {
+      if (!entries.length) return alert("Chưa có dữ liệu để phân tích!");
+      await analyzeAI(entries);
     });
   }
 });
 
-// =======================
-// NAV MENU
-// =======================
-document.addEventListener("DOMContentLoaded", () => {
-  const toggle = document.getElementById("nav-toggle");
-  const menu = document.getElementById("nav-menu");
-  if (toggle && menu) {
-    toggle.addEventListener("click", () => {
-      menu.classList.toggle("mobile-open");
-    });
-  }
-});
-
-console.log("🔥 NK-NL main.js loaded successfully");
-
+console.log("🔥 main.js loaded successfully");
