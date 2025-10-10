@@ -221,7 +221,8 @@ document.addEventListener("click", (e) => {
   }
 });
 
-const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // 🔑 Dán key thật của bạn vào
+// ====== GEMINI AI PHÂN TÍCH BIỂU ĐỒ ======
+const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // 👉 Dán API key tại đây
 
 const analyzeBtn = document.getElementById("analyze-btn");
 const aiBox = document.getElementById("ai-analysis");
@@ -233,7 +234,7 @@ if (analyzeBtn) {
     const journalList = document.getElementById("journal-list");
     const items = Array.from(journalList.querySelectorAll("li"));
     if (items.length === 0) {
-      aiBox.innerHTML = "⚠️ Chưa có dữ liệu để phân tích.";
+      aiBox.innerHTML = "⚠️ Không có dữ liệu để phân tích!";
       return;
     }
 
@@ -251,14 +252,14 @@ if (analyzeBtn) {
                 parts: [
                   {
                     text:
-                      "Dưới đây là nhật ký năng lực cá nhân:\n" +
+                      "Dưới đây là các nhật ký năng lực:\n" +
                       summary +
-                      "\n\n→ Hãy phân tích xu hướng điểm số, đánh giá tiến bộ và gợi ý cải thiện ngắn gọn bằng tiếng Việt."
-                  },
-                ],
-              },
-            ],
-          }),
+                      "\n\n→ Hãy phân tích xu hướng điểm số, đánh giá tiến bộ và gợi ý ngắn gọn bằng tiếng Việt."
+                  }
+                ]
+              }
+            ]
+          })
         }
       );
 
@@ -279,6 +280,8 @@ if (analyzeBtn) {
     }
   });
 }
+
+
 
 
 
