@@ -664,3 +664,65 @@ html, body, * {
   background: #4f46e5;
   color: white;
 }
+/* 🌙 NAVBAR RESPONSIVE FIX */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+/* hamburger mặc định ẩn trên desktop */
+.hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.hamburger:hover {
+  transform: scale(1.1);
+}
+
+/* Menu mặc định (desktop) */
+.menu {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Mobile breakpoint */
+@media (max-width: 980px) {
+  .hamburger {
+    display: block;
+  }
+  .menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    padding: 12px 0;
+    text-align: center;
+  }
+  .menu.mobile-open {
+    display: flex;
+  }
+  .menu a {
+    padding: 12px 16px;
+    width: 100%;
+    color: var(--text);
+  }
+  .menu a:hover {
+    background: var(--glass);
+  }
+}
+
