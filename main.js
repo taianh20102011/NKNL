@@ -1,5 +1,5 @@
-// main.js — NKNL 2025: Firebase Auth + Firestore + Chart + Theme
-// --------------------------------------------------------------
+// main.js — NKNL 2025: Firebase Auth + Firestore + Chart + Theme + Auto SignIn
+// ---------------------------------------------------------------------------
 
 // ✅ IMPORTS
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
@@ -9,7 +9,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {
   getFirestore,
@@ -19,10 +19,13 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  onSnapshot
+  onSnapshot,
+  doc,
+  setDoc,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-// ✅ FIREBASE CONFIG (chỉ khai báo 1 lần duy nhất)
+// ✅ FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
   authDomain: "nknl-d7b54.firebaseapp.com",
@@ -30,10 +33,10 @@ const firebaseConfig = {
   storageBucket: "nknl-d7b54.firebasestorage.app",
   messagingSenderId: "792185587281",
   appId: "1:792185587281:web:585e98f2f87d7d59031a70",
-  measurementId: "G-TC7XHSSCBX"
+  measurementId: "G-TC7XHSSCBX",
 };
 
-// ✅ INITIALIZE FIREBASE
+// ✅ INIT
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
@@ -54,7 +57,7 @@ const escapeHtml = (text = "") => {
 // THEME SWITCHER
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
-  const themeToggle = document.querySelector("#theme-toggle");
+  const themeToggle = q("#theme-toggle");
   const applyTheme = (theme) => {
     if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
     else document.documentElement.removeAttribute("data-theme");
@@ -79,6 +82,9 @@ const registerForm = q("#register-form");
 const loginForm = q("#login-form");
 const logoutBtn = q("#logout-btn");
 
+// --------------------
+// ✅ REGISTER
+// --------------------
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -89,7 +95,20 @@ if (registerForm) {
 
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // ✅ Lưu thông tin người dùng vào Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email,
+        createdAt: serverTimestamp(),
+      });
+
+      // ✅ Lưu tên và email vào localStorage (auto sign-in next time)
       localStorage.setItem("nk-user-name", name);
+      localStorage.setItem("nk-user-email", email);
+      localStorage.setItem("nk-user-pass", password);
+
       alert("✅ Đăng ký thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
@@ -99,14 +118,20 @@ if (registerForm) {
   });
 }
 
+// --------------------
+// ✅ LOGIN
+// --------------------
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = q("#login-email").value.trim();
     const password = q("#login-password").value.trim();
     if (!email || !password) return alert("Nhập email và mật khẩu!");
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      localStorage.setItem("nk-user-email", email);
+      localStorage.setItem("nk-user-pass", password);
       alert("✅ Đăng nhập thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
@@ -118,13 +143,34 @@ if (loginForm) {
   });
 }
 
+// --------------------
+// ✅ LOGOUT
+// --------------------
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     await signOut(auth);
+    localStorage.removeItem("nk-user-pass"); // xóa mật khẩu để tránh tự đăng nhập sau logout
     alert("Đã đăng xuất!");
     window.location.href = "login.html";
   });
 }
+
+// =======================
+// AUTO LOGIN (Remember Me)
+// =======================
+window.addEventListener("DOMContentLoaded", async () => {
+  const email = localStorage.getItem("nk-user-email");
+  const pass = localStorage.getItem("nk-user-pass");
+  if (email && pass && !auth.currentUser) {
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      console.info("🔁 Auto sign-in successful for:", email);
+    } catch (err) {
+      console.warn("Auto login failed:", err);
+      localStorage.removeItem("nk-user-pass"); // tránh loop login lỗi
+    }
+  }
+});
 
 // =======================
 // JOURNAL SYSTEM
@@ -172,7 +218,9 @@ function renderEntries() {
         <span style="font-weight:700;color:var(--accent)">⭐ ${e.rating || 0}/10</span>
       </div>
       <div style="font-weight:700">${escapeHtml(e.goal)}</div>
-      <div style="color:var(--muted);margin-top:4px">${escapeHtml(e.activities || "Không ghi")}</div>
+      <div style="color:var(--muted);margin-top:4px">${escapeHtml(
+        e.activities || "Không ghi"
+      )}</div>
     </li>`
     )
     .join("");
