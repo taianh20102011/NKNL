@@ -699,15 +699,35 @@ html, body, * {
   }
 }
 .ai-box {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--surface);
+  margin-top: 20px;
+  padding: 15px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  font-style: italic;
-  line-height: 1.6;
-  color: var(--muted);
-  min-height: 80px;
+  background: var(--card-bg, #1e1e2f);
+  color: var(--text, #fff);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  text-align: left;
 }
+
+.ai-box h3 {
+  margin-bottom: 10px;
+  color: #4f46e5;
+}
+
+.btn-ai {
+  background: #6366f1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+
+.btn-ai:hover {
+  background: #4f46e5;
+}
+
+
 
 
