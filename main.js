@@ -221,42 +221,51 @@ document.addEventListener("click", (e) => {
   }
 });
 
+const GEMINI_API_KEY = "AIzaSyA3UsKatbkPLqBFicqHzLClyGC_6hG15mc"; // Dán key ở đây
+
 const analyzeBtn = document.getElementById("analyze-btn");
 const aiBox = document.getElementById("ai-analysis");
 
 if (analyzeBtn) {
   analyzeBtn.addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Vui lòng đăng nhập!");
-      return;
-    }
+    aiBox.innerHTML = "🤔 Đang phân tích bằng Gemini...";
 
-    aiBox.innerHTML = "🤔 Đang phân tích...";
-
-    // Tạo summary từ logs hiện có
     const journalList = document.getElementById("journal-list");
     const items = Array.from(journalList.querySelectorAll("li"));
     const summary = items.map(li => li.textContent).join("\n");
 
     try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ summary })
-      });
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: "Phân tích dữ liệu biểu đồ năng lực cá nhân:\n" + summary }
+                ]
+              }
+            ]
+          })
+        }
+      );
+
       const data = await res.json();
-      if (data.result) {
-        aiBox.innerHTML = `<strong>Kết quả AI:</strong><br>${data.result}`;
-      } else {
-        aiBox.innerHTML = "❌ Không nhận được phản hồi AI.";
-      }
+      const text =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "Không nhận được phản hồi từ Gemini.";
+
+      aiBox.innerHTML = `<strong>Kết quả AI:</strong><br>${text}`;
     } catch (err) {
-      console.error("AI fetch error:", err);
-      aiBox.innerHTML = `Lỗi AI: ${err.message}`;
+      console.error("Gemini error:", err);
+      aiBox.innerHTML = `❌ Lỗi AI: ${err.message}`;
     }
   });
 }
+
+
 
 
 
