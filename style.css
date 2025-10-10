@@ -698,4 +698,16 @@ html, body, * {
     padding: 8px;
   }
 }
+.ai-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--muted);
+  min-height: 80px;
+}
+
 
