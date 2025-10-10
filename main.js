@@ -1,33 +1,48 @@
 // main.js — NKNL 2025: Firebase Auth + Firestore + Chart + Theme
 // --------------------------------------------------------------
 
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+// ✅ IMPORTS
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  serverTimestamp,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
-    authDomain: "nknl-d7b54.firebaseapp.com",
-    projectId: "nknl-d7b54",
-    storageBucket: "nknl-d7b54.firebasestorage.app",
-    messagingSenderId: "792185587281",
-    appId: "1:792185587281:web:585e98f2f87d7d59031a70",
-    measurementId: "G-TC7XHSSCBX"
-  };
+// ✅ FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+  authDomain: "nknl-d7b54.firebaseapp.com",
+  projectId: "nknl-d7b54",
+  storageBucket: "nknl-d7b54.firebasestorage.app",
+  messagingSenderId: "792185587281",
+  appId: "1:792185587281:web:585e98f2f87d7d59031a70",
+  measurementId: "G-TC7XHSSCBX"
+};
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
+// ✅ INITIALIZE FIREBASE
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 console.info("✅ Firebase initialized");
 
-/* =======================
-   HELPERS
-   ======================= */
+// =======================
+// HELPERS
+// =======================
 const q = (s) => document.querySelector(s);
 const escapeHtml = (text = '') => {
   const div = document.createElement('div');
@@ -35,9 +50,9 @@ const escapeHtml = (text = '') => {
   return div.innerHTML;
 };
 
-/* =======================
-   THEME SWITCHER
-   ======================= */
+// =======================
+// THEME SWITCHER
+// =======================
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.querySelector("#theme-toggle");
   const applyTheme = (theme) => {
@@ -57,9 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* =======================
-   AUTH: REGISTER / LOGIN / LOGOUT
-   ======================= */
+// =======================
+// AUTH: REGISTER / LOGIN / LOGOUT
+// =======================
 const registerForm = q("#register-form");
 const loginForm = q("#login-form");
 const logoutBtn = q("#logout-btn");
@@ -74,9 +89,10 @@ if (registerForm) {
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       localStorage.setItem("nk-user-name", name);
-      alert("Đăng ký thành công!");
+      alert("✅ Đăng ký thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
+      console.error("❌ Lỗi đăng ký:", err);
       alert("Lỗi đăng ký: " + err.message);
     }
   });
@@ -90,9 +106,10 @@ if (loginForm) {
     if (!email || !password) return alert("Nhập email và mật khẩu!");
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("Đăng nhập thành công!");
+      alert("✅ Đăng nhập thành công!");
       window.location.href = "analytics.html";
     } catch (err) {
+      console.error("❌ Lỗi đăng nhập:", err);
       alert("Lỗi đăng nhập: " + err.message);
     }
   });
@@ -106,9 +123,9 @@ if (logoutBtn) {
   });
 }
 
-/* =======================
-   JOURNAL SYSTEM (per user)
-   ======================= */
+// =======================
+// JOURNAL SYSTEM
+// =======================
 let entries = [];
 let chart = null;
 
@@ -181,9 +198,9 @@ function updateChart() {
   });
 }
 
-/* =======================
-   ON AUTH STATE CHANGE
-   ======================= */
+// =======================
+// ON AUTH STATE CHANGE
+// =======================
 onAuthStateChanged(auth, async (user) => {
   const name = localStorage.getItem("nk-user-name") || (user?.email || "");
   document.querySelectorAll(".brand").forEach(el => el.innerHTML = `NK<span>NL</span> — ${escapeHtml(name)}`);
@@ -232,6 +249,10 @@ onAuthStateChanged(auth, async (user) => {
     });
   }
 });
+
+// =======================
+// NAV MENU
+// =======================
 document.addEventListener("DOMContentLoaded", () => {
   const toggle = document.getElementById("nav-toggle");
   const menu = document.getElementById("nav-menu");
@@ -243,6 +264,3 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.log("🔥 NK-NL main.js loaded successfully");
-
-
-
