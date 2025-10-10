@@ -221,4 +221,14 @@ document.addEventListener("click", (e) => {
   }
 });
 
+async function analyzeChartWithAI(summary) {
+  const res = await fetch("/api/analyze", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ summary })
+  });
+  const data = await res.json();
+  alert("Kết quả phân tích AI:\n" + data.result);
+}
+
 
