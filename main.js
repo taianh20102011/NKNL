@@ -203,3 +203,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+// 🌟 Navbar toggle for mobile
+document.addEventListener("DOMContentLoaded", () => {
+  const toggle = document.getElementById("nav-toggle");
+  const menu = document.getElementById("nav-menu");
+
+  if (toggle && menu) {
+    toggle.addEventListener("click", () => {
+      const open = menu.classList.toggle("mobile-open");
+      toggle.textContent = open ? "✕" : "☰";
+    });
+
+    // Đóng menu khi click ngoài khu vực menu
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && e.target !== toggle && menu.classList.contains("mobile-open")) {
+        menu.classList.remove("mobile-open");
+        toggle.textContent = "☰";
+      }
+    });
+  }
+});
+
