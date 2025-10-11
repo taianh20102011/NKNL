@@ -749,39 +749,60 @@ html, body, * {
   font-size: 0.95rem;
 }
 
-/* 🌟 Logo PNG gốc — Nhật Kí Năng Lực */
+/* 🎯 Tối ưu logo trong thanh điều hướng */
+.nav-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 92%;
+  margin: auto;
+  padding: 6px 0;
+}
+
+/* Logo gốc PNG */
 .logo-brand {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 16px;             /* tăng khoảng cách hai bên */
+  margin-right: 12px;          /* cách nhẹ với menu */
   text-decoration: none;
-  background: transparent;
-  border: none;
-}
-
-/* Kích thước logo */
-.logo-img {
-  height: 60px;            /* chỉnh kích thước tùy nav của bạn */
-  width: auto;
-  display: block;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15)); /* bóng nhẹ */
   transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-/* Hiệu ứng hover nhẹ */
-.logo-brand:hover .logo-img {
-  transform: scale(1.05);
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+/* Ảnh logo */
+.logo-brand img {
+  height: 46px;                /* giảm kích thước cho cân bằng */
+  width: auto;
+  display: block;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-/* Responsive: logo co nhỏ lại trên mobile */
+/* Hiệu ứng hover logo */
+.logo-brand:hover img {
+  transform: scale(1.06);
+  filter: drop-shadow(0 4px 10px rgba(79,70,229,0.25));
+}
+
+/* Căn giữa nếu nav chia đôi (logo ở giữa, menu hai bên) */
+.nav-inner.centered {
+  justify-content: center;
+  gap: 32px;
+}
+
+/* Mobile — logo nhỏ hơn */
 @media (max-width: 600px) {
-  .logo-img {
-    height: 48px;
+  .logo-brand img {
+    height: 38px;
+  }
+  .nav-inner {
+    padding: 4px 0;
   }
 }
 
-
-
-
-
+/* Khi thu nhỏ hơn nữa (<480px), có thể dùng logo rút gọn */
+@media (max-width: 480px) {
+  .logo-brand img {
+    height: 32px;
+  }
+}
