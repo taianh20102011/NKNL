@@ -749,6 +749,77 @@ html, body, * {
   font-size: 0.95rem;
 }
 
+/* 🌟 LOGO ĐẦY ĐỦ — KHÔNG DÙNG ẢNH */
+.logo-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px auto;
+  user-select: none;
+}
 
+/* Biểu tượng: quyển sách + cây bút */
+.logo-icon {
+  position: relative;
+  width: 80px;
+  height: 60px;
+}
 
+/* sách mở */
+.logo-icon .book {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: linear-gradient(135deg, #0b2c95 45%, transparent 45%),
+              linear-gradient(225deg, #0b2c95 45%, transparent 45%);
+  background-repeat: no-repeat;
+  background-size: 50% 100%;
+  background-position: left, right;
+  transform: perspective(100px) rotateX(15deg);
+}
 
+/* cây bút lông */
+.logo-icon .feather {
+  position: absolute;
+  right: 10px;
+  top: -15px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #0b2c95 40%, transparent 40%);
+  clip-path: polygon(0 0, 100% 20%, 70% 100%, 30% 100%);
+  transform: rotate(25deg);
+  border-radius: 2px;
+}
+
+/* ✨ chữ */
+.logo-text {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #0b2c95;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  position: relative;
+}
+
+/* hiệu ứng ánh sáng quét ngang chữ */
+.logo-text::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -80%;
+  width: 50%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.7), transparent);
+  transform: skewX(-25deg);
+  animation: sweep 3s infinite;
+}
+
+@keyframes sweep {
+  0% { left: -80%; }
+  50% { left: 130%; }
+  100% { left: 130%; }
+}
