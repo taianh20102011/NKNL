@@ -749,122 +749,38 @@ html, body, * {
   font-size: 0.95rem;
 }
 
-/* === 🌟 LOGO NHẬT KÍ NĂNG LỰC (HTML + CSS) === */
+/* 🌟 Logo PNG gốc — Nhật Kí Năng Lực */
 .logo-brand {
-  text-decoration: none !important;
-  color: inherit;
   display: flex;
   align-items: center;
-  gap: 8px;
   justify-content: center;
-  padding: 6px 10px;
-}
-
-/* vùng logo */
-.logo-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  transform: scale(0.9);
-}
-
-.book-logo {
-  position: relative;
-  width: 60px;
-  height: 40px;
-}
-
-/* Hai trang sách mở */
-.page {
-  position: absolute;
-  bottom: 0;
-  width: 50%;
-  height: 24px;
-  border-bottom: 4px solid #0b2c95;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-}
-
-.page.left {
-  left: 0;
-  transform: skewY(-12deg) rotate(-5deg);
-}
-
-.page.right {
-  right: 0;
-  transform: skewY(12deg) rotate(5deg);
-}
-
-/* Cây bút lông */
-.feather {
-  position: absolute;
-  top: -22px;
-  right: 8px;
-  width: 34px;
-  height: 34px;
-  background: #0b2c95;
-  clip-path: polygon(50% 0%, 100% 25%, 70% 100%, 30% 100%, 0% 25%);
-  transform: rotate(25deg);
-  border-radius: 2px;
-}
-
-/* Sống lông trắng giữa bút */
-.feather::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 48%;
-  width: 2px;
-  height: 100%;
-  background: white;
-  opacity: 0.8;
-}
-
-/* Chữ NHẬT KÍ NĂNG LỰC */
-.logo-title {
-  margin-top: 4px;
-  font-family: 'Cinzel', serif;
-  font-weight: 800;
-  font-size: 0.8rem;
-  color: #0b2c95;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  text-align: center;
-  position: relative;
-}
-
-/* Hiệu ứng ánh sáng quét ngang */
-.logo-title::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -80%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.7), transparent);
-  transform: skewX(-25deg);
-  animation: sweep 3s infinite;
-}
-
-@keyframes sweep {
-  0% { left: -80%; }
-  50% { left: 130%; }
-  100% { left: 130%; }
-}
-
-/* Hover nhẹ */
-.logo-wrapper:hover .feather {
-  transform: rotate(30deg) scale(1.05);
-  transition: all 0.4s ease;
-}
-
-/* Đảm bảo logo không bị màu nav che */
-.nav .brand.logo-brand {
+  text-decoration: none;
   background: transparent;
   border: none;
 }
+
+/* Kích thước logo */
+.logo-img {
+  height: 60px;            /* chỉnh kích thước tùy nav của bạn */
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15)); /* bóng nhẹ */
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* Hiệu ứng hover nhẹ */
+.logo-brand:hover .logo-img {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+}
+
+/* Responsive: logo co nhỏ lại trên mobile */
+@media (max-width: 600px) {
+  .logo-img {
+    height: 48px;
+  }
+}
+
 
 
 
