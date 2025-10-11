@@ -748,13 +748,3 @@ html, body, * {
   margin-top: 10px;
   font-size: 0.95rem;
 }
-
-/* 🎯 Tối ưu logo trong thanh điều hướng */
-.nav-inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 92%;
-  margin: auto;
-  padding: 6px 0;
-}
