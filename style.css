@@ -749,70 +749,89 @@ html, body, * {
   font-size: 0.95rem;
 }
 
-/* 🌟 LOGO ĐẦY ĐỦ — KHÔNG DÙNG ẢNH */
-.logo-full {
+/* === LOGO HTML + CSS giống hình cây bút & sách === */
+.logo-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   margin: 20px auto;
   user-select: none;
 }
 
-/* Biểu tượng: quyển sách + cây bút */
-.logo-icon {
+.book-logo {
   position: relative;
-  width: 80px;
-  height: 60px;
+  width: 100px;
+  height: 70px;
 }
 
-/* sách mở */
-.logo-icon .book {
+/* hai trang sách */
+.page {
   position: absolute;
   bottom: 0;
+  width: 50px;
+  height: 40px;
+  border-bottom: 6px solid #0b2c95;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  transform-origin: bottom;
+}
+
+.page.left {
   left: 0;
-  width: 100%;
-  height: 30px;
-  background: linear-gradient(135deg, #0b2c95 45%, transparent 45%),
-              linear-gradient(225deg, #0b2c95 45%, transparent 45%);
-  background-repeat: no-repeat;
-  background-size: 50% 100%;
-  background-position: left, right;
-  transform: perspective(100px) rotateX(15deg);
+  transform: skewY(-12deg) rotate(-4deg);
+}
+
+.page.right {
+  right: 0;
+  transform: skewY(12deg) rotate(4deg);
 }
 
 /* cây bút lông */
-.logo-icon .feather {
+.feather {
   position: absolute;
-  right: 10px;
-  top: -15px;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #0b2c95 40%, transparent 40%);
-  clip-path: polygon(0 0, 100% 20%, 70% 100%, 30% 100%);
+  top: -30px;
+  right: 15px;
+  width: 50px;
+  height: 50px;
+  background: #0b2c95;
+  clip-path: polygon(50% 0%, 100% 20%, 70% 100%, 30% 100%, 0% 20%);
   transform: rotate(25deg);
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
-/* ✨ chữ */
-.logo-text {
+/* thêm sống lông (vệt trắng giữa bút) */
+.feather::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 48%;
+  width: 3px;
+  height: 100%;
+  background: white;
+  opacity: 0.8;
+  transform: skewX(10deg);
+}
+
+/* chữ dưới */
+.logo-title {
+  margin-top: 6px;
   font-family: 'Cinzel', serif;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #0b2c95;
-  letter-spacing: 1px;
-  text-transform: uppercase;
   text-align: center;
-  position: relative;
+  letter-spacing: 1px;
 }
 
 /* hiệu ứng ánh sáng quét ngang chữ */
-.logo-text::after {
+.logo-title::after {
   content: "";
   position: absolute;
-  top: 0; left: -80%;
-  width: 50%; height: 100%;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
   background: linear-gradient(120deg, transparent, rgba(255,255,255,0.7), transparent);
   transform: skewX(-25deg);
   animation: sweep 3s infinite;
@@ -823,3 +842,11 @@ html, body, * {
   50% { left: 130%; }
   100% { left: 130%; }
 }
+
+/* hiệu ứng hover nhẹ */
+.logo-wrapper:hover .feather {
+  transform: rotate(30deg) scale(1.05);
+  transition: all 0.4s ease;
+}
+
+
