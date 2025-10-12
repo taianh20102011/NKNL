@@ -586,3 +586,52 @@ html, body {
     padding: 32px 0;
   }
 }
+/* ==== Layout mặc định (mobile / tablet) ==== */
+.container {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* ==== Large screen fix (>=1200px) ==== */
+@media screen and (min-width: 1200px) {
+  .container {
+    width: 80%;
+    max-width: 1400px;
+    gap: 40px; /* tăng khoảng cách giữa các obj */
+  }
+
+  .object {
+    transform: scale(1.1); /* các obj to hơn 10% */
+    transition: transform 0.3s ease;
+  }
+
+  .object:hover {
+    transform: scale(1.15); /* hiệu ứng hover nhẹ */
+  }
+}
+
+/* ==== Ultra wide (>=1600px) ==== */
+@media screen and (min-width: 1600px) {
+  .container {
+    max-width: 1600px;
+    gap: 60px;
+  }
+
+  .object {
+    transform: scale(1.2);
+  }
+}
+img, .card {
+  width: 100%;
+  max-width: 400px;
+}
+@media screen and (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+  }
+}
