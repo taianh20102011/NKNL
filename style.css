@@ -1067,3 +1067,51 @@ body,
 .menu li a:hover::after {
   width: 100%;
 }
+/* 🌟 Nhiệm vụ & XP */
+.xp-box {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.leaderboard {
+  margin-top: 40px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.leaderboard ul {
+  list-style: none;
+  padding: 0;
+}
+
+.leaderboard li {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.anon-msg {
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid var(--border);
+  margin: 6px 0;
+}
+
+textarea#anon-input {
+  width: 100%;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
