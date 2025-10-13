@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lộ trình năng lực — Nhật ký năng lực</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .page { padding: 40px; max-width: 1000px; margin:auto; }
+  .node { border:1px solid var(--border); border-radius:10px; padding:10px 16px; margin:8px; display:inline-block; background:var(--card); cursor:pointer; transition:0.2s; }
+  .node:hover { background:var(--accent); color:white; transform:scale(1.05); }
+  .tree { display:flex; flex-wrap:wrap; justify-content:center; }
+  .line { width:2px; background:var(--border); height:40px; margin:auto; }
+</style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
+      <div class="menu">
+        <a href="missions.html">Nhiệm vụ</a>
+        <a href="profile.html">Hồ sơ</a>
+        <a href="growth.html" class="active">Lộ trình</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
+    </div>
+  </header>
+
+  <section class="page">
+    <h1>🌳 Lộ trình phát triển năng lực</h1>
+    <p class="lead">Khám phá hành trình kỹ năng của bạn và mở khóa bước tiếp theo!</p>
+
+    <div class="tree" id="growthTree">
+      <!-- sẽ render bằng JS -->
+    </div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+      authDomain: "nknl-d7b54.firebaseapp.com",
+      projectId: "nknl-d7b54",
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const growthTree = document.getElementById('growthTree');
+    const skillPath = [
+      { id:1, title:"Bắt đầu hành trình 🌱", xp:0, unlocked:true },
+      { id:2, title:"Rèn luyện phản chiếu 💬", xp:50 },
+      { id:3, title:"Phát triển cảm xúc ❤️", xp:100 },
+      { id:4, title:"Lãnh đạo bản thân 🌟", xp:200 },
+    ];
+
+    function renderTree(xp){
+      growthTree.innerHTML='';
+      skillPath.forEach(s=>{
+        const node=document.createElement('div');
+        node.className='node';
+        const unlocked = xp>=s.xp;
+        node.innerHTML = `${s.title}<br><small>${unlocked?"✅ Hoàn thành":"🔒 Cần "+s.xp+" XP"}</small>`;
+        node.style.opacity=unlocked?1:0.5;
+        growthTree.appendChild(node);
+      });
+    }
+
+    onAuthStateChanged(auth, async user=>{
+      let xp=Number(localStorage.getItem('missions_xp_local')||0);
+      if(user){
+        const docRef=doc(db,'users',user.uid);
+        const snap=await getDoc(docRef);
+        xp=snap.exists()? (snap.data().xp||0):xp;
+      }
+      renderTree(xp);
+    });
+  </script>
+</body>
+</html>
