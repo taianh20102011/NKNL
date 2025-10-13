@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ cá nhân — Nhật ký năng lực</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .profile-box { max-width:600px;margin:40px auto;padding:24px;border-radius:16px;background:var(--card);border:1px solid var(--border);text-align:center; }
+  .xp-bar { height:10px;border-radius:5px;background:#ccc;overflow:hidden;margin-top:10px;}
+  .xp-fill { height:10px;background:var(--accent);width:0%;transition:width 0.5s;}
+  .badges { display:flex;justify-content:center;flex-wrap:wrap;margin-top:20px;gap:10px;}
+  .badge { background:var(--accent);color:#fff;padding:8px 12px;border-radius:12px; }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
+    <div class="menu">
+      <a href="missions.html">Nhiệm vụ</a>
+      <a href="growth.html">Lộ trình</a>
+      <a href="profile.html" class="active">Hồ sơ</a>
+    </div>
+  </div>
+</header>
+
+<section class="profile-box">
+  <h1 id="profileName">Người dùng</h1>
+  <p>Cấp bậc: <b id="rankTitle">...</b></p>
+  <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
+  <p><span id="xpValue">0</span> XP</p>
+  <div class="badges" id="badgeBox"></div>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey:"AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg", authDomain:"nknl-d7b54.firebaseapp.com", projectId:"nknl-d7b54" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function getRank(xp){
+  if(xp>=200) return "Người định hình năng lực 🌟";
+  if(xp>=100) return "Nhà phản chiếu sâu sắc 💡";
+  if(xp>=50) return "Người học tích cực 💪";
+  return "Người khởi đầu 🌱";
+}
+
+function renderProfile(name,xp){
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('xpValue').textContent = xp;
+  document.getElementById('rankTitle').textContent = getRank(xp);
+  document.getElementById('xpFill').style.width = Math.min(xp/200*100,100)+'%';
+  const badges=[];
+  if(xp>=50) badges.push("🏅 Người học tích cực");
+  if(xp>=100) badges.push("🎖 Nhà phản chiếu sâu sắc");
+  if(xp>=200) badges.push("👑 Định hình năng lực");
+  document.getElementById('badgeBox').innerHTML = badges.map(b=>`<div class='badge'>${b}</div>`).join('');
+}
+
+onAuthStateChanged(auth, async user=>{
+  let xp=Number(localStorage.getItem('missions_xp_local')||0);
+  let name="Khách ẩn danh";
+  if(user){
+    const snap=await getDoc(doc(db,'users',user.uid));
+    if(snap.exists()){ xp=snap.data().xp||xp; name=user.email||"Người dùng"; }
+  }
+  renderProfile(name,xp);
+});
+</script>
+</body>
+</html>
