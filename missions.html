@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nhiệm vụ & Khen thưởng - Nhật ký năng lực</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="main.js"></script>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">Nhật ký <span>Năng lực</span></a>
+      <div class="menu" id="nav-menu">
+        <a href="journal.html">Nhật ký</a>
+        <a href="features.html">Tính năng</a>
+        <a href="missions.html" class="active">Nhiệm vụ</a>
+        <a href="login.html" id="logout-btn">Đăng xuất</a>
+      </div>
+      <div class="hamburger" id="nav-toggle">☰</div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <h1>🎯 Nhiệm vụ tuần & tháng</h1>
+    <p class="lead">Hoàn thành các thử thách để nhận <b>XP</b> và mở khóa cấp bậc mới!</p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>📝 Ghi nhật ký 3 ngày liên tiếp</h3>
+        <p>Rèn luyện thói quen phản chiếu mỗi ngày.</p>
+        <button class="btn complete-btn" data-xp="10">Hoàn thành</button>
+      </div>
+
+      <div class="card">
+        <h3>💬 Đưa ra 1 nhận xét tích cực cho bạn khác</h3>
+        <p>Thể hiện tinh thần hỗ trợ và cộng đồng.</p>
+        <button class="btn complete-btn" data-xp="5">Hoàn thành</button>
+      </div>
+
+      <div class="card">
+        <h3>📚 Học 1 kỹ năng mới trong tuần</h3>
+        <p>Ghi minh chứng hoặc cảm nhận vào nhật ký.</p>
+        <button class="btn complete-btn" data-xp="15">Hoàn thành</button>
+      </div>
+    </div>
+
+    <div class="xp-box">
+      <h2>🌟 Tổng điểm kinh nghiệm: <span id="xp-total">0</span> XP</h2>
+      <p id="rank-label">Cấp bậc: Người khởi đầu</p>
+    </div>
+
+    <div class="leaderboard">
+      <h2>🏆 Bảng xếp hạng</h2>
+      <ul id="leaderboard-list"></ul>
+    </div>
+  </section>
+
+  <footer class="footer">© 2025 Nhật ký Năng lực</footer>
+</body>
+</html>
