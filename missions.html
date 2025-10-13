@@ -1,61 +1,459 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nhiệm vụ & Khen thưởng - Nhật ký năng lực</title>
-  <link rel="stylesheet" href="style.css" />
-  <script type="module" src="main.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nhiệm vụ & Khen thưởng — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Thêm một số CSS nhỏ chuyên cho page này (dùng chung style.css chính) */
+    .page { padding: 36px 20px; max-width:1100px; margin: 0 auto; }
+    .missions-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:18px; }
+    .mission-card { padding:14px; border-radius:12px; background:var(--card); border:1px solid var(--border); }
+    .mission-card h4 { margin:0 0 8px 0; }
+    .small-muted { color:var(--muted); font-size:0.95rem; }
+    .xp-banner { margin-top:10px; display:flex; gap:12px; align-items:center; justify-content:space-between;}
+    #messagesBox { max-height:260px; overflow:auto; padding:8px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid var(--border); }
+    .msg { padding:10px; border-radius:10px; margin-bottom:8px; background: rgba(0,0,0,0.12) }
+    .leaderboard-list { list-style:none; padding:0; margin:0;}
+    .leaderboard-list li { padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .unlock { color:var(--accent); font-weight:700 }
+  </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="index.html" class="brand">Nhật ký <span>Năng lực</span></a>
+  <!-- Nav (dùng cùng style) -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
       <div class="menu" id="nav-menu">
+        <a href="index.html">Trang chủ</a>
         <a href="journal.html">Nhật ký</a>
         <a href="features.html">Tính năng</a>
         <a href="missions.html" class="active">Nhiệm vụ</a>
-        <a href="login.html" id="logout-btn">Đăng xuất</a>
       </div>
-      <div class="hamburger" id="nav-toggle">☰</div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
     </div>
-  </nav>
+  </header>
 
-  <section class="page">
-    <h1>🎯 Nhiệm vụ tuần & tháng</h1>
-    <p class="lead">Hoàn thành các thử thách để nhận <b>XP</b> và mở khóa cấp bậc mới!</p>
+  <main class="page">
+    <h1>🎯 Nhiệm vụ & XP</h1>
+    <p class="small-muted">Hoàn thành nhiệm vụ để nhận XP, mở huy hiệu và leo bảng xếp hạng. Chat ẩn danh cho cộng đồng.</p>
 
-    <div class="cards">
-      <div class="card">
-        <h3>📝 Ghi nhật ký 3 ngày liên tiếp</h3>
-        <p>Rèn luyện thói quen phản chiếu mỗi ngày.</p>
-        <button class="btn complete-btn" data-xp="10">Hoàn thành</button>
+    <div class="xp-banner">
+      <div>
+        <div class="small-muted">Tổng XP của bạn</div>
+        <div style="font-size:20px;font-weight:800"><span id="xpValue">0</span> XP <span id="unlockBadge" class="unlock" style="display:none">· Mở khóa AI lộ trình!</span></div>
+        <div class="small-muted">Cấp bậc: <span id="rankLabel">Người khởi đầu</span></div>
       </div>
-
-      <div class="card">
-        <h3>💬 Đưa ra 1 nhận xét tích cực cho bạn khác</h3>
-        <p>Thể hiện tinh thần hỗ trợ và cộng đồng.</p>
-        <button class="btn complete-btn" data-xp="5">Hoàn thành</button>
-      </div>
-
-      <div class="card">
-        <h3>📚 Học 1 kỹ năng mới trong tuần</h3>
-        <p>Ghi minh chứng hoặc cảm nhận vào nhật ký.</p>
-        <button class="btn complete-btn" data-xp="15">Hoàn thành</button>
+      <div>
+        <button id="loginQuick" class="btn">Đăng nhập</button>
+        <button id="syncBtn" class="btn">Đồng bộ</button>
       </div>
     </div>
 
-    <div class="xp-box">
-      <h2>🌟 Tổng điểm kinh nghiệm: <span id="xp-total">0</span> XP</h2>
-      <p id="rank-label">Cấp bậc: Người khởi đầu</p>
-    </div>
+    <section>
+      <h3 style="margin-top:18px">Nhiệm vụ Tuần này</h3>
+      <div class="missions-grid" id="missionsGrid">
+        <!-- JS sẽ render nhiệm vụ ở đây -->
+      </div>
+    </section>
 
-    <div class="leaderboard">
-      <h2>🏆 Bảng xếp hạng</h2>
-      <ul id="leaderboard-list"></ul>
-    </div>
-  </section>
+    <section style="margin-top:22px">
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+        <div class="mission-card">
+          <h3>💬 Góc ẩn danh</h3>
+          <p class="small-muted">Chia sẻ cảm xúc, nỗ lực, hoặc minh chứng. Tin nhắn hiển thị realtime.</p>
+          <div style="margin-top:8px">
+            <input id="anonNick" placeholder="Biệt danh (tùy chọn)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)" />
+            <textarea id="anonText" placeholder="Viết gì đó..." style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)"></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="sendAnon" class="btn">Gửi</button>
+              <button id="refreshMsgs" class="btn ghost">Làm mới</button>
+            </div>
+          </div>
+          <div id="messagesBox" style="margin-top:12px"></div>
+        </div>
+
+        <aside class="mission-card">
+          <h3>🏆 Bảng xếp hạng</h3>
+          <p class="small-muted">Những người có nhiều XP & hoàn thành nhiều nhiệm vụ nhất</p>
+          <ul id="leaderboard" class="leaderboard-list" style="margin-top:10px"></ul>
+        </aside>
+      </div>
+    </section>
+
+    <section style="margin-top:18px">
+      <button id="analyzeAI" class="btn-ai">Phân tích AI (offline)</button>
+      <div id="aiResult" class="ai-box small-muted" style="display:none;margin-top:10px"></div>
+    </section>
+  </main>
 
   <footer class="footer">© 2025 Nhật ký Năng lực</footer>
+
+  <script type="module">
+    // ===== Firebase SDK modules (CDN) =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    // === Firebase config (same as main.js) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+      authDomain: "nknl-d7b54.firebaseapp.com",
+      projectId: "nknl-d7b54",
+      storageBucket: "nknl-d7b54.firebasestorage.app",
+      messagingSenderId: "792185587281",
+      appId: "1:792185587281:web:585e98f2f87d7d59031a70",
+      measurementId: "G-TC7XHSSCBX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ===== App state & elements =====
+    const missionsGrid = document.getElementById('missionsGrid');
+    const xpValueEl = document.getElementById('xpValue');
+    const rankLabel = document.getElementById('rankLabel');
+    const unlockBadge = document.getElementById('unlockBadge');
+    const sendAnonBtn = document.getElementById('sendAnon');
+    const messagesBox = document.getElementById('messagesBox');
+    const leaderboardEl = document.getElementById('leaderboard');
+    const analyzeBtn = document.getElementById('analyzeAI');
+    const aiResult = document.getElementById('aiResult');
+    const loginQuick = document.getElementById('loginQuick');
+    const syncBtn = document.getElementById('syncBtn');
+
+    // Local fallback if not logged in
+    const LS_XP = 'missions_xp_local';
+    const LS_MSGS = 'missions_msgs_local';
+    const LS_COMPLETE = 'missions_complete_local';
+
+    // Predefined missions
+    const DEFAULT_MISSIONS = [
+      { id: 'm1', title: 'Học 20 từ mới', xp: 10, weekly: true },
+      { id: 'm2', title: 'Viết 3 dòng cảm nhận', xp: 5, weekly: true },
+      { id: 'm3', title: 'Nộp minh chứng kỹ năng', xp: 20, weekly: false },
+      { id: 'm4', title: 'Đánh giá 1 bạn khác', xp: 5, weekly: true }
+    ];
+
+    // initialize UI
+    let currentUser = null;
+    let localXP = Number(localStorage.getItem(LS_XP) || "0");
+    let localCompleted = JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}");
+
+    // ===== Render missions list =====
+    function renderMissions(completed = {}) {
+      missionsGrid.innerHTML = '';
+      DEFAULT_MISSIONS.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'mission-card';
+        card.innerHTML = `
+          <h4>${m.title}</h4>
+          <div class="small-muted">+${m.xp} XP · ${m.weekly ? 'Nhiệm vụ tuần' : 'Nhiệm vụ'}</div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+            <label style="display:flex;align-items:center;gap:8px"><input data-id="${m.id}" type="checkbox" ${completed[m.id] ? 'checked':''} /> Đã hoàn thành</label>
+            <button class="btn claim-btn" data-id="${m.id}">Nhận</button>
+          </div>
+        `;
+        missionsGrid.appendChild(card);
+      });
+
+      // checkbox listener -> save locally
+      missionsGrid.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', async (e) => {
+          const id = e.target.dataset.id;
+          completed[id] = e.target.checked;
+          localStorage.setItem(LS_COMPLETE, JSON.stringify(completed));
+          // If user logged in, update their doc's completedTasks map
+          if (currentUser) {
+            const uDoc = doc(db, 'users', currentUser.uid);
+            await updateUserCompletedOnFirestore(currentUser.uid, completed);
+          }
+        });
+      });
+
+      // claim buttons
+      missionsGrid.querySelectorAll('.claim-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+          // check if marked done
+          const checkbox = missionsGrid.querySelector(`input[data-id="${id}"]`);
+          if (!checkbox || !checkbox.checked) return alert('Vui lòng đánh dấu hoàn thành trước khi nhận XP.');
+          const mission = DEFAULT_MISSIONS.find(x => x.id === id);
+          if (!mission) return;
+          await awardXP(mission.xp, id);
+        });
+      });
+    }
+
+    // ===== XP logic =====
+    async function awardXP(amount, missionId) {
+      if (currentUser) {
+        // update Firestore user's xp and leaderboard doc
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          const newXP = (data.xp || 0) + amount;
+          await setDoc(userRef, { xp: newXP, displayName: data.displayName || currentUser.email || 'Người dùng' }, { merge: true });
+          // update leaderboard doc
+          const lbRef = doc(db, 'leaderboard', currentUser.uid);
+          await setDoc(lbRef, { uid: currentUser.uid, name: data.displayName || currentUser.email || 'Người dùng', xp: newXP, updatedAt: new Date().toISOString() }, { merge: true });
+          // mark mission claimed to avoid double-claim: we can remove checkbox or disable button
+          // (we'll keep local completed map to prevent immediate re-claim)
+        } else {
+          // user doc not found: create
+          await setDoc(userRef, { xp: amount, displayName: currentUser.email || 'Người dùng' }, { merge: true });
+          await setDoc(doc(db,'leaderboard', currentUser.uid), { uid: currentUser.uid, name: currentUser.email || 'Người dùng', xp: amount, updatedAt: new Date().toISOString() }, { merge: true });
+        }
+      } else {
+        // not logged: local fallback
+        localXP += amount;
+        localStorage.setItem(LS_XP, String(localXP));
+      }
+      updateXPUI();
+      alert(`Bạn nhận được ${amount} XP!`);
+    }
+
+    // update XP UI from Firestore (if logged) or local
+    async function updateXPUI() {
+      if (currentUser) {
+        const uRef = doc(db, 'users', currentUser.uid);
+        const uSnap = await getDoc(uRef);
+        const xp = (uSnap.exists() && uSnap.data().xp) ? uSnap.data().xp : 0;
+        xpValueEl.textContent = xp;
+        updateRankLabel(xp);
+        if (xp >= 50) unlockBadge.style.display = 'inline';
+        else unlockBadge.style.display = 'none';
+      } else {
+        xpValueEl.textContent = localXP;
+        updateRankLabel(localXP);
+        if (localXP >= 50) unlockBadge.style.display = 'inline';
+        else unlockBadge.style.display = 'none';
+      }
+    }
+
+    function updateRankLabel(xp) {
+      let rank = 'Người khởi đầu';
+      if (xp >= 200) rank = 'Chuyên gia';
+      else if (xp >= 100) rank = 'Thành thạo';
+      else if (xp >= 50) rank = 'Người học tích cực';
+      else if (xp >= 20) rank = 'Khám phá';
+      rankLabel.textContent = rank;
+    }
+
+    // ===== Realtime chat (anonMessages collection) =====
+    function renderMessages(docs) {
+      messagesBox.innerHTML = '';
+      docs.forEach(doc => {
+        const data = doc.data ? doc.data() : doc; // support array of plain objects for local mode
+        const nick = data.nick || 'Ẩn danh';
+        const text = data.text || '';
+        const time = data.createdAt ? new Date(data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt).toLocaleString() : '';
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML = `<div style="font-size:12px;color:var(--muted)">${nick} · ${time}</div><div style="margin-top:6px">${escapeHtml(text)}</div>`;
+        messagesBox.appendChild(div);
+      });
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+
+    // hook Firestore realtime listener
+    let msgsUnsub = null;
+    function startMessagesListener() {
+      const col = collection(db, 'anonMessages');
+      const q = query(col, orderBy('createdAt', 'desc'), limit(50));
+      msgsUnsub = onSnapshot(q, snap => {
+        const arr = [];
+        snap.forEach(d => arr.push(d));
+        // reverse so oldest first
+        renderMessages(arr.reverse());
+      }, err => {
+        console.error('msg listen err', err);
+      });
+    }
+
+    // send anon message
+    sendAnonBtn.addEventListener('click', async () => {
+      const nick = document.getElementById('anonNick').value.trim();
+      const text = document.getElementById('anonText').value.trim();
+      if (!text) return alert('Nhập tin nhắn trước khi gửi.');
+      const payload = {
+        nick: nick || (currentUser ? (currentUser.displayName || currentUser.email) : 'Ẩn danh'),
+        text,
+        createdAt: new Date()
+      };
+      try {
+        if (currentUser) {
+          // save with user context
+          await addDoc(collection(db, 'anonMessages'), payload);
+        } else {
+          // if not logged -> store locally as fallback
+          const arr = JSON.parse(localStorage.getItem(LS_MSGS) || "[]");
+          arr.push({ ...payload, createdAt: new Date().toISOString() });
+          localStorage.setItem(LS_MSGS, JSON.stringify(arr));
+          // also render local list
+          const localDocs = JSON.parse(localStorage.getItem(LS_MSGS) || "[]");
+          renderMessages(localDocs.map(d => ({ nick: d.nick, text: d.text, createdAt: d.createdAt })));
+        }
+        document.getElementById('anonText').value = '';
+      } catch (err) {
+        console.error('send message err', err);
+        alert('Không thể gửi tin nhắn: ' + err.message);
+      }
+    });
+
+    document.getElementById('refreshMsgs').addEventListener('click', () => {
+      if (currentUser) {
+        // will be updated realtime via snapshot
+        alert('Tin nhắn realtime đang cập nhật tự động.');
+      } else {
+        const localDocs = JSON.parse(localStorage.getItem(LS_MSGS) || "[]");
+        renderMessages(localDocs.map(d => ({ nick: d.nick, text: d.text, createdAt: d.createdAt })));
+      }
+    });
+
+    // escape html
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+    }
+
+    // ===== Leaderboard realtime =====
+    let lbUnsub = null;
+    function startLeaderboardListener() {
+      const col = collection(db, 'leaderboard');
+      const q = query(col, orderBy('xp', 'desc'), limit(20));
+      lbUnsub = onSnapshot(q, snap => {
+        leaderboardEl.innerHTML = '';
+        snap.forEach(doc => {
+          const d = doc.data();
+          const li = document.createElement('li');
+          li.innerHTML = `<div style="font-weight:700">${escapeHtml(d.name || 'Người')}</div><div style="font-weight:700">${d.xp || 0} XP</div>`;
+          leaderboardEl.appendChild(li);
+        });
+      });
+    }
+
+    // if not logged: create leaderboard view from localStorage (demo)
+    function renderLocalLeaderboard() {
+      // read localStorage 'local_leaderboard' or derive from local xp only
+      const fake = JSON.parse(localStorage.getItem('local_leaderboard') || "[]");
+      if (fake.length === 0) {
+        // show local user only
+        leaderboardEl.innerHTML = `<li><div style="font-weight:700">Bạn (local)</div><div style="font-weight:700">${localXP} XP</div></li>`;
+        return;
+      }
+      leaderboardEl.innerHTML = '';
+      fake.sort((a,b) => b.xp - a.xp).forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div style="font-weight:700">${escapeHtml(p.name)}</div><div style="font-weight:700">${p.xp} XP</div>`;
+        leaderboardEl.appendChild(li);
+      });
+    }
+
+    // ===== Sync user completed map to Firestore (merge) =====
+    async function updateUserCompletedOnFirestore(uid, completedMap) {
+      const uRef = doc(db, 'users', uid);
+      try {
+        await setDoc(uRef, { completed: completedMap }, { merge: true });
+      } catch (err) {
+        console.error('update completed err', err);
+      }
+    }
+
+    // ===== onAuth state =====
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        // start listeners
+        startMessagesListener();
+        startLeaderboardListener();
+
+        // load user doc xp & completed tasks
+        try {
+          const uRef = doc(db, 'users', user.uid);
+          const uSnap = await getDoc(uRef);
+          if (uSnap.exists()) {
+            const data = uSnap.data();
+            // set UI xp
+            xpValueEl.textContent = data.xp || 0;
+            updateRankLabel(data.xp || 0);
+            // merge completed
+            const completed = data.completed || JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}");
+            localStorage.setItem(LS_COMPLETE, JSON.stringify(completed));
+            renderMissions(completed);
+          } else {
+            // new user
+            await setDoc(uRef, { xp: localXP || 0, displayName: user.displayName || user.email || 'Người dùng' }, { merge: true });
+            await setDoc(doc(db,'leaderboard', user.uid), { uid: user.uid, name: user.displayName || user.email || 'Người dùng', xp: localXP || 0, updatedAt: new Date().toISOString() }, { merge: true });
+            renderMissions(JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}"));
+            xpValueEl.textContent = localXP || 0;
+            updateRankLabel(localXP || 0);
+          }
+        } catch (err) {
+          console.error('load user doc err', err);
+          renderMissions(JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}"));
+        }
+
+      } else {
+        // not logged
+        currentUser = null;
+        // stop firestore listeners if exist
+        if (msgsUnsub) { msgsUnsub(); msgsUnsub = null; }
+        if (lbUnsub) { lbUnsub(); lbUnsub = null; }
+        // render local fallback
+        const localMsgs = JSON.parse(localStorage.getItem(LS_MSGS) || "[]");
+        renderMessages(localMsgs.map(d => ({ nick: d.nick, text: d.text, createdAt: d.createdAt })));
+        renderLocalLeaderboard();
+        renderMissions(JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}"));
+        updateXPUI();
+      }
+    });
+
+    // ===== Utility: update Firestore user's xp when they get local xp and then login (sync button) =====
+    syncBtn.addEventListener('click', async () => {
+      if (!currentUser) return alert('Vui lòng đăng nhập để đồng bộ lên server.');
+      try {
+        // merge localXP into firestore xp
+        const uRef = doc(db, 'users', currentUser.uid);
+        const uSnap = await getDoc(uRef);
+        const serverXP = uSnap.exists() ? (uSnap.data().xp || 0) : 0;
+        const merged = serverXP + localXP;
+        await setDoc(uRef, { xp: merged, displayName: currentUser.displayName || currentUser.email }, { merge: true });
+        await setDoc(doc(db,'leaderboard', currentUser.uid), { uid: currentUser.uid, name: currentUser.displayName || currentUser.email, xp: merged, updatedAt: new Date().toISOString() }, { merge: true });
+        // clear local
+        localXP = 0; localStorage.removeItem(LS_XP);
+        alert('Đồng bộ thành công!');
+        updateXPUI();
+      } catch (err) {
+        console.error('sync err', err);
+        alert('Đồng bộ thất bại: ' + err.message);
+      }
+    });
+
+    // Quick "login" button: redirect to login page / or open login.html
+    loginQuick.addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+
+    // ===== Offline AI analysis (simple) =====
+    analyzeBtn.addEventListener('click', async () => {
+      // get recent xp history? For demo, we'll analyze leaderboard top values as proxy
+      if (currentUser) {
+        // fetch user's last 10 xp changes from leaderboard update timestamps not available -> do simple message-based sentiment
+        aiResult.style.display = 'block';
+        aiResult.innerText = '🧠 Phân tích đơn giản: Bạn đang có hoạt động đều đặn. (Demo offline)'; 
+      } else {
+        aiResult.style.display = 'block';
+        aiResult.innerText = '⚠️ Chưa đăng nhập — phân tích chỉ có thể chạy khi có dữ liệu người dùng.';
+      }
+    });
+
+    // initial render for non-auth quick view
+    renderMissions(JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}"));
+    updateXPUI();
+
+  </script>
 </body>
 </html>
