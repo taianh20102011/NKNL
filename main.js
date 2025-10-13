@@ -268,17 +268,94 @@ if (analyzeBtn) {
     resultBox.innerText = analysis;
   });
 }
+// ==========================
+// 🎯 HỆ THỐNG NHIỆM VỤ / XU / CẤP BẬC
+// ==========================
+const xpKey = "userXP";
+let userXP = parseInt(localStorage.getItem(xpKey) || "0");
 
+function updateXPDisplay() {
+  const xpDisplay = document.getElementById("xp-total");
+  const rankLabel = document.getElementById("rank-label");
+  if (xpDisplay) xpDisplay.textContent = userXP;
 
+  if (rankLabel) {
+    let rank = "Người khởi đầu";
+    if (userXP >= 100) rank = "Nhà phản chiếu sâu sắc 🌟";
+    else if (userXP >= 50) rank = "Người học tích cực 💪";
+    else if (userXP >= 20) rank = "Người khám phá 🔍";
+    rankLabel.textContent = `Cấp bậc: ${rank}`;
+  }
+}
 
+function gainXP(amount) {
+  userXP += amount;
+  localStorage.setItem(xpKey, userXP);
+  updateXPDisplay();
+  alert(`🎉 Bạn nhận được ${amount} XP!`);
+}
 
+document.querySelectorAll(".complete-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const amount = parseInt(btn.dataset.xp);
+    gainXP(amount);
+  });
+});
 
+updateXPDisplay();
 
+// ==========================
+// 💬 NHÓM ẨN DANH CHIA SẺ CẢM XÚC
+// ==========================
+const anonGroup = document.createElement("section");
+anonGroup.innerHTML = `
+  <h2>💭 Góc chia sẻ ẩn danh</h2>
+  <textarea id="anon-input" placeholder="Hãy chia sẻ cảm xúc hoặc nỗ lực hôm nay..."></textarea>
+  <button class="btn" id="send-anon">Gửi</button>
+  <div id="anon-messages"></div>
+`;
+if (document.body.contains(document.querySelector(".page"))) {
+  document.querySelector(".page").appendChild(anonGroup);
+}
 
+const anonMessages = JSON.parse(localStorage.getItem("anonMessages") || "[]");
+function renderAnonMessages() {
+  const box = document.getElementById("anon-messages");
+  if (!box) return;
+  box.innerHTML = anonMessages
+    .map(m => `<div class="anon-msg">🗨️ ${m}</div>`)
+    .join("");
+}
+renderAnonMessages();
 
+const sendAnon = document.getElementById("send-anon");
+if (sendAnon) {
+  sendAnon.addEventListener("click", () => {
+    const val = document.getElementById("anon-input").value.trim();
+    if (!val) return;
+    anonMessages.push(val);
+    localStorage.setItem("anonMessages", JSON.stringify(anonMessages));
+    renderAnonMessages();
+    document.getElementById("anon-input").value = "";
+  });
+}
 
+// ==========================
+// 🔔 THÔNG BÁO & NHẮC NHỞ
+// ==========================
+function showReminder() {
+  const now = new Date();
+  if (now.getHours() === 20) {
+    new Notification("⏰ Nhắc nhở", {
+      body: "Đừng quên ghi lại nhật ký năng lực hôm nay nhé!",
+    });
+  }
+}
 
-
-
-
-
+if ("Notification" in window) {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      setInterval(showReminder, 3600000); // mỗi 1h kiểm tra 1 lần
+    }
+  });
+}
