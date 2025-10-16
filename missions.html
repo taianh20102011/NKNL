@@ -1,33 +1,32 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Nhiệm vụ & XP — Nhật ký Năng lực</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .page { padding: 36px 20px; max-width:1100px; margin: 0 auto; }
-    .missions-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:18px; }
-    .mission-card { padding:14px; border-radius:12px; background:var(--card); border:1px solid var(--border); transition:all 0.3s; }
-    .mission-card:hover { transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,0.15); }
+    .page { padding:36px 20px; max-width:1100px; margin:0 auto; }
+    .missions-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+    .mission-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; transition:0.2s; }
+    .mission-card:hover { transform:translateY(-3px); box-shadow:0 3px 10px rgba(0,0,0,0.15); }
     .small-muted { color:var(--muted); font-size:0.95rem; }
-    .goto-btn { background:transparent;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:8px;cursor:pointer; }
-    .goto-btn:hover { background:var(--accent);color:white; }
     .mission-btn[disabled]{opacity:0.6;cursor:not-allowed;}
+    .goto-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;}
+    .goto-btn:hover{background:var(--accent);color:white;}
   </style>
 </head>
 <body>
 <header class="nav">
   <div class="container nav-inner">
     <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
-    <nav class="menu" id="nav-menu">
+    <nav class="menu">
       <a href="index.html">Trang chủ</a>
       <a href="journal.html">Nhật ký</a>
       <a href="features.html">Tính năng</a>
       <a href="missions.html" class="active">Nhiệm vụ</a>
       <a href="profile.html">Hồ sơ</a>
     </nav>
-    <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
   </div>
 </header>
 
@@ -41,26 +40,10 @@
       <div style="font-weight:800"><span id="xpValue">0</span> XP <span id="unlockBadge" style="display:none;color:var(--accent)">· Mở khóa AI!</span></div>
       <div class="small-muted">Cấp bậc: <span id="rankLabel">Người khởi đầu</span></div>
     </div>
-    <button id="loginQuick" class="btn">Đăng nhập</button>
   </div>
 
   <h3 style="margin-top:18px">🎮 Nhiệm vụ Tuần này</h3>
   <div class="missions-grid" id="missionsGrid"></div>
-
-  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:18px">
-    <div class="mission-card">
-      <h3>💬 Góc ẩn danh</h3>
-      <input id="anonNick" placeholder="Biệt danh (tùy chọn)" style="width:100%;padding:8px;border-radius:6px;margin-top:8px">
-      <textarea id="anonText" placeholder="Viết gì đó..." style="width:100%;margin-top:8px;padding:8px;border-radius:6px"></textarea>
-      <div style="margin-top:8px"><button id="sendAnon" class="btn">Gửi</button></div>
-      <div id="messagesBox" style="margin-top:12px;max-height:220px;overflow:auto"></div>
-    </div>
-
-    <aside class="mission-card">
-      <h3>🏆 Bảng xếp hạng</h3>
-      <ul id="leaderboard" style="list-style:none;padding:0;margin:0"></ul>
-    </aside>
-  </div>
 </main>
 
 <footer class="footer">© 2025 Nhật ký Năng lực</footer>
@@ -68,17 +51,13 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
   authDomain: "nknl-d7b54.firebaseapp.com",
-  projectId: "nknl-d7b54",
-  storageBucket: "nknl-d7b54.firebasestorage.app",
-  messagingSenderId: "792185587281",
-  appId: "1:792185587281:web:585e98f2f87d7d59031a70"
+  projectId: "nknl-d7b54"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -91,117 +70,75 @@ const missions = [
 ];
 
 let currentUser=null;
-let userState = JSON.parse(localStorage.getItem('missions_state') || '{}');
-let localXP = Number(localStorage.getItem('xp_local') || '0');
+let userState=JSON.parse(localStorage.getItem('missions_state')||'{}');
+let localXP=Number(localStorage.getItem('xp_local')||'0');
 
 function updateXPUI(xp){
   document.getElementById('xpValue').textContent = xp;
-  const unlock = document.getElementById('unlockBadge');
-  const rank = document.getElementById('rankLabel');
-  unlock.style.display = xp>=50 ? 'inline':'none';
-  rank.textContent = xp>=200?'Chuyên gia':xp>=100?'Thành thạo':xp>=50?'Người học tích cực':xp>=20?'Khám phá':'Người khởi đầu';
+  document.getElementById('unlockBadge').style.display = xp>=50?'inline':'none';
+  document.getElementById('rankLabel').textContent =
+    xp>=200?'Chuyên gia':xp>=100?'Thành thạo':xp>=50?'Người học tích cực':xp>=20?'Khám phá':'Người khởi đầu';
 }
 
 function renderMissions(){
   const grid=document.getElementById('missionsGrid');
   grid.innerHTML='';
   missions.forEach(m=>{
-    const state = userState[m.id] || {done:false,claimed:false};
+    const st=userState[m.id]||{done:false,claimed:false};
     const card=document.createElement('div');
-    card.className='mission-card'+(state.done&&!state.claimed?' active-mission':'');
-    const status = state.claimed ? '✅ Đã nhận XP' : (state.done?'🕓 Đã hoàn thành — Chưa nhận':'🔒 Chưa hoàn thành');
+    card.className='mission-card';
+    const canClaim=st.done && !st.claimed;
+    const status=st.claimed?'✅ Đã nhận XP':(st.done?'🕓 Đã hoàn thành — Chưa nhận':'🔒 Chưa hoàn thành');
     card.innerHTML=`
       <h4>${m.title}</h4>
-      <div class="small-muted">${status}</div>
+      <p class="small-muted">${status}</p>
       <div style="margin-top:10px">
-        <button class="btn mission-btn" data-id="${m.id}" ${(!state.done||state.claimed)?'disabled':''}>Nhận ${m.xp} XP</button>
-        <button class="goto-btn" data-link="${m.link}">Đến nhiệm vụ</button>
+        <button class="btn mission-btn" data-id="${m.id}" ${canClaim?'':'disabled'}>Nhận ${m.xp} XP</button>
+        <button class="goto-btn" onclick="location.href='${m.link}'">Đến nhiệm vụ</button>
       </div>`;
     grid.appendChild(card);
   });
 
-  grid.querySelectorAll('.goto-btn').forEach(b=>{
-    b.addEventListener('click',()=>location.href=b.dataset.link);
-  });
-  grid.querySelectorAll('.mission-btn').forEach(b=>{
-    b.addEventListener('click',()=>claimXP(b.dataset.id));
+  grid.querySelectorAll('.mission-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>claimXP(btn.dataset.id));
   });
 }
 
 async function claimXP(id){
   const s=userState[id]||{done:false,claimed:false};
-  if(!s.done) return alert('Bạn chưa hoàn thành nhiệm vụ!');
-  if(s.claimed) return alert('Bạn đã nhận XP rồi!');
+  if(!s.done) return alert('❌ Bạn chưa hoàn thành nhiệm vụ này!');
+  if(s.claimed) return alert('⚠️ Bạn đã nhận XP rồi!');
   const m=missions.find(x=>x.id===id); if(!m) return;
-
-  s.claimed=true;
-  userState[id]=s;
+  s.claimed=true; userState[id]=s;
   localStorage.setItem('missions_state',JSON.stringify(userState));
 
   if(currentUser){
     const ref=doc(db,'users',currentUser.uid);
     const snap=await getDoc(ref);
-    const prev=snap.exists()?snap.data().xp||0:0;
-    const newXP=prev+m.xp;
-    await setDoc(ref,{xp:newXP,missions:userState},{merge:true});
-    await setDoc(doc(db,'leaderboard',currentUser.uid),{name:currentUser.email||'Người dùng',xp:newXP},{merge:true});
-    updateXPUI(newXP);
-  }else{
+    const xp=(snap.exists()?snap.data().xp||0:0)+m.xp;
+    await setDoc(ref,{xp,missions:userState},{merge:true});
+  } else {
     localXP+=m.xp;
     localStorage.setItem('xp_local',localXP);
-    updateXPUI(localXP);
   }
+  updateXPUI(currentUser? (await getDoc(doc(db,'users',currentUser.uid))).data().xp : localXP);
   renderMissions();
   alert(`+${m.xp} XP!`);
 }
 
-// góc ẩn danh
-document.getElementById('sendAnon').addEventListener('click',async()=>{
-  const nick=document.getElementById('anonNick').value.trim()||'Ẩn danh';
-  const text=document.getElementById('anonText').value.trim();
-  if(!text) return alert('Hãy viết gì đó!');
-  await addDoc(collection(db,'anonMessages'),{nick,text,createdAt:new Date()});
-  document.getElementById('anonText').value='';
-});
-onSnapshot(query(collection(db,'anonMessages'),orderBy('createdAt','desc'),limit(20)),snap=>{
-  const box=document.getElementById('messagesBox');
-  box.innerHTML='';
-  snap.forEach(d=>{
-    const v=d.data();
-    const div=document.createElement('div');
-    div.className='msg';
-    div.innerHTML=`<b>${v.nick}</b><br>${v.text}`;
-    box.appendChild(div);
-  });
-});
-
-// bảng xếp hạng
-onSnapshot(query(collection(db,'leaderboard'),orderBy('xp','desc'),limit(10)),snap=>{
-  const lb=document.getElementById('leaderboard');
-  lb.innerHTML='';
-  snap.forEach(d=>{
-    const v=d.data();
-    const li=document.createElement('li');
-    li.innerHTML=`<span>${v.name||'Người'}</span><b>${v.xp||0} XP</b>`;
-    lb.appendChild(li);
-  });
-});
-
-// xác thực
+// Auth
 onAuthStateChanged(auth,async u=>{
   currentUser=u;
-  if(currentUser){
+  if(u){
     const ref=doc(db,'users',u.uid);
     const snap=await getDoc(ref);
     if(snap.exists()){
-      const d=snap.data();
-      userState=d.missions||userState;
-      updateXPUI(d.xp||0);
+      userState=snap.data().missions||userState;
+      updateXPUI(snap.data().xp||0);
     }
   }else updateXPUI(localXP);
   renderMissions();
 });
-document.getElementById('loginQuick').addEventListener('click',()=>location.href='login.html');
 </script>
 </body>
 </html>
