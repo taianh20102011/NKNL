@@ -1,80 +1,166 @@
 <!doctype html>
 <html lang="vi">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Hồ sơ</title><link rel="stylesheet" href="style.css"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hồ sơ cá nhân — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .profile-container {
+      max-width: 620px;
+      margin: 40px auto;
+      padding: 28px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .xp-bar {
+      height: 12px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg,var(--accent),var(--accent-2));
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+    .badges {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .badge {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(79,70,229,0.25);
+    }
+  </style>
+</head>
 <body>
-    <header class="nav">
+  <header class="nav">
     <div class="container nav-inner">
-
-    <div class="nav-inner">
       <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
-    <!-- Hamburger button -->
-    <button id="nav-toggle" class="hamburger" aria-label="Mở menu">☰</button>
       <div class="menu" id="nav-menu">
-      <a href="index.html">Trang chủ</a>
-      <a href="journal.html">Nhật ký</a>
-      <a href="features.html">Tính năng</a>
-      <a href="missions.html">Nhiệm vụ</a>
-      <a href="profile.html">Hồ sơ</a>
-        <a href="login.html" id="logout-btn">Đăng xuất</a>
+        <a href="index.html">Trang chủ</a>
+        <a href="journal.html">Nhật ký</a>
+        <a href="features.html">Tính năng</a>
+        <a href="missions.html">Nhiệm vụ</a>
+        <a href="growth.html">Lộ trình</a>
+        <a href="profile.html" class="active">Hồ sơ</a>
+        <a href="login.html" id="logoutBtn">Đăng xuất</a>
       </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Đổi giao diện">🌙</button>
     </div>
-      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
-    </div>
-  </header> 
-<main class="page">
-  <h1>👤 Hồ sơ</h1>
-  <div id="nameBox">Người dùng</div>
-  <div style="margin-top:12px">XP: <span id="xpBox">0</span></div>
-  <div style="margin-top:8px">Cấp bậc: <span id="rankBox">Người khởi đầu</span></div>
-  <div style="margin-top:12px" id="badgesBox"></div>
-  <div style="margin-top:12px"><button id="syncBtn" class="btn">Đồng bộ hiển thị</button></div>
-</main>
+  </header>
 
-<script type="module">
-import { auth, db } from 'main.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  <main class="page">
+    <section class="profile-container">
+      <h1 id="profileName">Người dùng</h1>
+      <p>Cấp bậc: <b id="rankTitle">Người khởi đầu 🌱</b></p>
+      <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
+      <p><b id="xpValue">0</b> XP</p>
+      <div class="badges" id="badgeBox"></div>
+      <button id="syncBtn" class="btn" style="margin-top:20px">🔄 Đồng bộ</button>
+    </section>
+  </main>
 
-const xpBox = document.getElementById('xpBox');
-const rankBox = document.getElementById('rankBox');
-const badgesBox = document.getElementById('badgesBox');
-const nameBox = document.getElementById('nameBox');
+  <footer class="footer">© 2025 Nhật ký Năng lực</footer>
 
-function getRank(xp){
-  if(xp>=200) return 'Chuyên gia';
-  if(xp>=100) return 'Thành thạo';
-  if(xp>=50) return 'Người học tích cực';
-  if(xp>=20) return 'Khám phá';
-  return 'Người khởi đầu';
-}
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-async function refreshProfile(){
-  let xp = Number(localStorage.getItem('missions_xp_local')||0);
-  let name = 'Khách';
-  const user = auth.currentUser;
-  if (user) {
-    const snap = await getDoc(doc(db,'users',user.uid));
-    if (snap.exists()) {
-      const d = snap.data();
-      xp = d.xp || xp;
-      name = d.displayName || user.email || name;
-    } else name = user.email || name;
-  }
-  xpBox.textContent = xp;
-  rankBox.textContent = getRank(xp);
-  nameBox.textContent = name;
-  const badges = [];
-  if (xp>=50) badges.push('🏅 Người học tích cực');
-  if (xp>=100) badges.push('🎖 Nhà phản chiếu sâu sắc');
-  if (xp>=200) badges.push('👑 Định hình năng lực');
-  badgesBox.innerHTML = badges.map(b=>`<div style="display:inline-block;margin-right:8px">${b}</div>`).join('');
-}
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+      authDomain: "nknl-d7b54.firebaseapp.com",
+      projectId: "nknl-d7b54",
+      storageBucket: "nknl-d7b54.firebasestorage.app",
+      messagingSenderId: "792185587281",
+      appId: "1:792185587281:web:585e98f2f87d7d59031a70"
+    };
 
-document.getElementById('syncBtn').addEventListener('click', refreshProfile);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-onAuthStateChanged(auth, user => {
-  refreshProfile();
-});
-</script>
+    // === Hàm xử lý cấp bậc & huy hiệu ===
+    function getRank(xp){
+      if(xp>=200) return "Định hình năng lực 👑";
+      if(xp>=100) return "Nhà phản chiếu sâu sắc 🎖";
+      if(xp>=50) return "Người học tích cực 🏅";
+      if(xp>=20) return "Người khám phá ✨";
+      return "Người khởi đầu 🌱";
+    }
+
+    function renderProfile(name,xp){
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('xpValue').textContent = xp;
+      document.getElementById('rankTitle').textContent = getRank(xp);
+      document.getElementById('xpFill').style.width = Math.min(xp/200*100,100)+'%';
+      const badges = [];
+      if(xp>=50) badges.push("🏅 Người học tích cực");
+      if(xp>=100) badges.push("🎖 Nhà phản chiếu sâu sắc");
+      if(xp>=200) badges.push("👑 Định hình năng lực");
+      document.getElementById('badgeBox').innerHTML = badges.map(b=>`<div class='badge'>${b}</div>`).join('');
+    }
+
+    async function syncProfile(){
+      const user = auth.currentUser;
+      let xp = Number(localStorage.getItem('missions_xp_local') || '0');
+      let name = 'Khách ẩn danh';
+      if(user){
+        const snap = await getDoc(doc(db,'users',user.uid));
+        if(snap.exists()){
+          const d = snap.data();
+          xp = d.xp || xp;
+          name = user.email || user.displayName || name;
+        } else {
+          name = user.email || name;
+        }
+      }
+      renderProfile(name,xp);
+    }
+
+    // Đồng bộ nút
+    document.getElementById('syncBtn').addEventListener('click', syncProfile);
+
+    // Đăng xuất
+    document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+      await signOut(auth);
+      alert("Đã đăng xuất!");
+      location.href='login.html';
+    });
+
+    // Lắng nghe trạng thái đăng nhập
+    onAuthStateChanged(auth, async user=>{
+      await syncProfile();
+    });
+
+    // === Dark / Light theme toggle ===
+    const themeToggle = document.getElementById("theme-toggle");
+    let currentTheme = localStorage.getItem("theme") || "dark";
+    const applyTheme = t=>{
+      if(t==="light") document.documentElement.setAttribute("data-theme","light");
+      else document.documentElement.removeAttribute("data-theme");
+    };
+    applyTheme(currentTheme);
+    themeToggle.textContent = currentTheme==="light"?"🌞":"🌙";
+    themeToggle.addEventListener("click",()=>{
+      currentTheme = currentTheme==="light"?"dark":"light";
+      localStorage.setItem("theme",currentTheme);
+      applyTheme(currentTheme);
+      themeToggle.textContent = currentTheme==="light"?"🌞":"🌙";
+    });
+  </script>
 </body>
 </html>
