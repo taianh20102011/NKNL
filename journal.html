@@ -57,9 +57,32 @@
 
   <footer class="footer">© 2025 Nhật ký Năng lực</footer>
 
-  <script type="module" src="main.js"></script>
+  <script type="module" src="main.js">
+    document.getElementById('saveEntry').addEventListener('click', async ()=>{
+  const txt = document.getElementById('entry').value.trim();
+  if(!txt) return alert('Viết gì đó đã!');
+  try {
+    if (auth.currentUser) {
+      await addDoc(collection(db,'journalEntries'), { uid: auth.currentUser.uid, text: txt, createdAt: new Date() });
+    } else {
+      // local fallback: save to localStorage
+      const arr = JSON.parse(localStorage.getItem('journal_local')||'[]');
+      arr.push({ text: txt, createdAt: new Date().toISOString() });
+      localStorage.setItem('journal_local', JSON.stringify(arr));
+    }
+    // mark mission done (m2 = viết 3 dòng cảm nhận)
+    await markMissionDone('m2');
+    alert('Lưu thành công — nhiệm vụ được ghi nhận!');
+    document.getElementById('entry').value = '';
+  } catch (err) {
+    console.error(err);
+    alert('Lưu thất bại');
+  }
+});
+  </script>
 </body>
 </html>
+
 
 
 
