@@ -138,7 +138,7 @@
         navMenu.classList.remove("mobile-open");
       }
     });
-    import { markMissionDone } from "missionsTracker.js";
+    import { markMissionDone } from "./missionsTracker.js";
 
 document.getElementById("finishLearning")?.addEventListener("click", async () => {
   const learned = Number(localStorage.getItem("words_learned") || 0);
