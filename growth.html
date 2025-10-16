@@ -121,7 +121,13 @@ document.addEventListener("click", (e) => {
     navMenu.classList.remove("mobile-open");
   }
 });
+import { markMissionDone } from 'missionsTracker.js';
 
+document.getElementById('addGoal').addEventListener('click', async ()=>{
+  // for demo: clicking means user "completed" a micro-activity => mark mission m1
+  await markMissionDone('m1'); // mark "Học 20 từ mới" done
+  alert('Hoàn thành hoạt động — nhiệm vụ đã được ghi nhận!');
+});
 
   </script>
 </body>
