@@ -1,32 +1,37 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Nhiệm vụ & XP — Nhật ký Năng lực</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .page { padding:36px 20px; max-width:1100px; margin:0 auto; }
-    .missions-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
-    .mission-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; transition:0.2s; }
-    .mission-card:hover { transform:translateY(-3px); box-shadow:0 3px 10px rgba(0,0,0,0.15); }
+    .page { padding: 36px 20px; max-width:1100px; margin: 0 auto; }
+    .missions-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:18px; }
+    .mission-card { padding:14px; border-radius:12px; background:var(--card); border:1px solid var(--border); transition:all 0.3s; }
+    .mission-card:hover { transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,0.15); }
     .small-muted { color:var(--muted); font-size:0.95rem; }
+    .goto-btn { background:transparent;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:8px;cursor:pointer; }
+    .goto-btn:hover { background:var(--accent);color:white; }
     .mission-btn[disabled]{opacity:0.6;cursor:not-allowed;}
-    .goto-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;}
-    .goto-btn:hover{background:var(--accent);color:white;}
+    .leaderboard-list { list-style:none; padding:0; margin:0; }
+    .leaderboard-list li { padding:8px 0; display:flex; justify-content:space-between; border-bottom:1px solid var(--border); }
+    .msg { padding:8px; background:rgba(0,0,0,0.06); border-radius:8px; margin-bottom:6px; }
   </style>
 </head>
 <body>
 <header class="nav">
   <div class="container nav-inner">
     <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
-    <nav class="menu">
+    <button id="nav-toggle" class="hamburger">☰</button>
+    <nav class="menu" id="nav-menu">
       <a href="index.html">Trang chủ</a>
       <a href="journal.html">Nhật ký</a>
       <a href="features.html">Tính năng</a>
       <a href="missions.html" class="active">Nhiệm vụ</a>
       <a href="profile.html">Hồ sơ</a>
     </nav>
+    <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
   </div>
 </header>
 
@@ -44,6 +49,22 @@
 
   <h3 style="margin-top:18px">🎮 Nhiệm vụ Tuần này</h3>
   <div class="missions-grid" id="missionsGrid"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:24px">
+    <div class="mission-card">
+      <h3>💬 Góc ẩn danh</h3>
+      <p class="small-muted">Chia sẻ cảm xúc, nỗ lực, hoặc minh chứng. Tin nhắn realtime.</p>
+      <input id="anonNick" placeholder="Biệt danh (tùy chọn)" style="width:100%;margin-top:6px;padding:8px;border-radius:6px;border:1px solid var(--border);">
+      <textarea id="anonText" placeholder="Viết gì đó..." style="width:100%;margin-top:8px;padding:8px;border-radius:6px;border:1px solid var(--border);"></textarea>
+      <button id="sendAnon" class="btn" style="margin-top:8px">Gửi</button>
+      <div id="messagesBox" style="margin-top:10px;max-height:260px;overflow:auto;"></div>
+    </div>
+
+    <aside class="mission-card">
+      <h3>🏆 Bảng xếp hạng</h3>
+      <ul id="leaderboard" class="leaderboard-list"></ul>
+    </aside>
+  </div>
 </main>
 
 <footer class="footer">© 2025 Nhật ký Năng lực</footer>
@@ -51,7 +72,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
@@ -62,6 +83,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ------------------------
+// 🎯 Nhiệm vụ hệ thống
+// ------------------------
 const missions = [
   { id:'m1', title:'🧠 Viết 3 dòng cảm nhận', xp:10, link:'journal.html' },
   { id:'m2', title:'📸 Nộp minh chứng kỹ năng', xp:20, link:'features.html' },
@@ -84,11 +108,11 @@ function renderMissions(){
   const grid=document.getElementById('missionsGrid');
   grid.innerHTML='';
   missions.forEach(m=>{
-    const st=userState[m.id]||{done:false,claimed:false};
+    const s=userState[m.id]||{done:false,claimed:false};
+    const canClaim=s.done&&!s.claimed;
+    const status=s.claimed?'✅ Đã nhận XP':(s.done?'🕓 Đã hoàn thành — Chưa nhận':'🔒 Chưa hoàn thành');
     const card=document.createElement('div');
     card.className='mission-card';
-    const canClaim=st.done && !st.claimed;
-    const status=st.claimed?'✅ Đã nhận XP':(st.done?'🕓 Đã hoàn thành — Chưa nhận':'🔒 Chưa hoàn thành');
     card.innerHTML=`
       <h4>${m.title}</h4>
       <p class="small-muted">${status}</p>
@@ -98,7 +122,6 @@ function renderMissions(){
       </div>`;
     grid.appendChild(card);
   });
-
   grid.querySelectorAll('.mission-btn').forEach(btn=>{
     btn.addEventListener('click',()=>claimXP(btn.dataset.id));
   });
@@ -109,6 +132,7 @@ async function claimXP(id){
   if(!s.done) return alert('❌ Bạn chưa hoàn thành nhiệm vụ này!');
   if(s.claimed) return alert('⚠️ Bạn đã nhận XP rồi!');
   const m=missions.find(x=>x.id===id); if(!m) return;
+
   s.claimed=true; userState[id]=s;
   localStorage.setItem('missions_state',JSON.stringify(userState));
 
@@ -126,7 +150,40 @@ async function claimXP(id){
   alert(`+${m.xp} XP!`);
 }
 
-// Auth
+// 💬 Góc ẩn danh
+document.getElementById('sendAnon').addEventListener('click',async()=>{
+  const nick=document.getElementById('anonNick').value.trim()||'Ẩn danh';
+  const text=document.getElementById('anonText').value.trim();
+  if(!text) return alert('Hãy viết gì đó!');
+  await addDoc(collection(db,'anonMessages'),{nick,text,createdAt:new Date()});
+  document.getElementById('anonText').value='';
+});
+
+onSnapshot(query(collection(db,'anonMessages'),orderBy('createdAt','desc'),limit(20)),snap=>{
+  const box=document.getElementById('messagesBox');
+  box.innerHTML='';
+  snap.forEach(d=>{
+    const v=d.data();
+    const div=document.createElement('div');
+    div.className='msg';
+    div.innerHTML=`<b>${v.nick}</b><br>${v.text}`;
+    box.appendChild(div);
+  });
+});
+
+// 🏆 Bảng xếp hạng
+onSnapshot(query(collection(db,'leaderboard'),orderBy('xp','desc'),limit(10)),snap=>{
+  const lb=document.getElementById('leaderboard');
+  lb.innerHTML='';
+  snap.forEach(d=>{
+    const v=d.data();
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${v.name||'Người'}</span><b>${v.xp||0} XP</b>`;
+    lb.appendChild(li);
+  });
+});
+
+// 👤 Auth
 onAuthStateChanged(auth,async u=>{
   currentUser=u;
   if(u){
@@ -139,6 +196,33 @@ onAuthStateChanged(auth,async u=>{
   }else updateXPUI(localXP);
   renderMissions();
 });
+
+// 🌗 Theme toggle + Navbar
+const q = s => document.querySelector(s);
+document.addEventListener("DOMContentLoaded", () => {
+  const themeToggle = q("#theme-toggle");
+  const applyTheme = t => t==="light" ? document.documentElement.setAttribute("data-theme","light")
+                                      : document.documentElement.removeAttribute("data-theme");
+  let theme=localStorage.getItem("theme")||"dark";
+  applyTheme(theme);
+  if(themeToggle){
+    themeToggle.textContent=theme==="light"?"🌞":"🌙";
+    themeToggle.addEventListener("click",()=>{
+      theme=theme==="light"?"dark":"light";
+      applyTheme(theme);
+      localStorage.setItem("theme",theme);
+      themeToggle.textContent=theme==="light"?"🌞":"🌙";
+    });
+  }
+});
+const navToggle=document.getElementById("nav-toggle");
+const navMenu=document.getElementById("nav-menu");
+if(navToggle&&navMenu){
+  navToggle.addEventListener("click",()=>navMenu.classList.toggle("mobile-open"));
+  document.addEventListener("click",e=>{
+    if(!navMenu.contains(e.target)&&!navToggle.contains(e.target)) navMenu.classList.remove("mobile-open");
+  });
+}
 </script>
 </body>
 </html>
