@@ -138,6 +138,15 @@
         navMenu.classList.remove("mobile-open");
       }
     });
+    import { markMissionDone } from "./missionsTracker.js";
+
+document.getElementById("finishLearning")?.addEventListener("click", async () => {
+  const learned = Number(localStorage.getItem("words_learned") || 0);
+  if (learned < 20) return alert("Bạn cần học đủ 20 từ mới để hoàn thành nhiệm vụ!");
+  await markMissionDone("m3");
+  console.log("✅ Đã đánh dấu hoàn thành nhiệm vụ: Học 20 từ mới (m3)");
+});
+
   </script>
 </body>
 </html>
