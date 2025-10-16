@@ -247,7 +247,49 @@ onAuthStateChanged(auth, async user => {
 
 // quick login redirect
 document.getElementById('loginQuick').addEventListener('click', ()=> location.href='login.html');
+const q = (sel) => document.querySelector(sel);
 
+document.addEventListener("DOMContentLoaded", () => {
+  const themeToggle = q("#theme-toggle");
+  const applyTheme = (theme) => {
+    if (theme === "light") {
+      document.documentElement.setAttribute("data-theme", "light");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  };
+
+  let currentTheme = localStorage.getItem("theme") || "dark";
+  applyTheme(currentTheme);
+
+  if (themeToggle) {
+    themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
+
+    themeToggle.addEventListener("click", () => {
+      currentTheme = currentTheme === "light" ? "dark" : "light";
+      applyTheme(currentTheme);
+      localStorage.setItem("theme", currentTheme);
+      themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
+    });
+  }
+});
+// 🌟 Navbar toggle for mobile
+// Hamburger toggle
+const navToggle = document.getElementById("nav-toggle");
+const navMenu = document.getElementById("nav-menu");
+
+if (navToggle && navMenu) {
+  navToggle.addEventListener("click", () => {
+    navMenu.classList.toggle("mobile-open");
+  });
+}
+
+// Ẩn menu khi click bên ngoài (tuỳ chọn)
+document.addEventListener("click", (e) => {
+  if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+    navMenu.classList.remove("mobile-open");
+  }
+});
 </script>
 </body>
 </html>
