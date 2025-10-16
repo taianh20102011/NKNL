@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Features</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="nav"><div class="container nav-inner"><a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a></div></header>
+<main class="page">
+  <h1>📁 Minh chứng kỹ năng</h1>
+  <textarea id="evidence" placeholder="Mô tả minh chứng..." style="width:100%;padding:8px"></textarea>
+  <div style="margin-top:8px"><button id="submitEvidence" class="btn">Nộp minh chứng</button></div>
+</main>
+
+<script type="module">
+import { markMissionDone } from './missionsTracker.js';
+document.getElementById('submitEvidence').addEventListener('click', async ()=>{
+  const t = document.getElementById('evidence').value.trim();
+  if(!t) return alert('Nhập mô tả minh chứng!');
+  // For demo: we consider submission as completing m3
+  await markMissionDone('m3');
+  alert('Nộp thành công — nhiệm vụ đã được ghi nhận!');
+  document.getElementById('evidence').value = '';
+});
+</script>
+</body>
+</html>
