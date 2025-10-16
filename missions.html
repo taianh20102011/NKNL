@@ -67,9 +67,24 @@
 
 <script type="module">
 import { auth, db } from 'main.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { doc, getDoc, setDoc, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-import { markMissionDone } from './missionsTracker.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+      authDomain: "nknl-d7b54.firebaseapp.com",
+      projectId: "nknl-d7b54",
+      storageBucket: "nknl-d7b54.firebasestorage.app",
+      messagingSenderId: "792185587281",
+      appId: "1:792185587281:web:585e98f2f87d7d59031a70"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+import { markMissionDone } from 'missionsTracker.js';
 
 const missions = [
   { id: 'm1', title: 'Học 20 từ mới', xp: 10, link: 'growth.html' },
