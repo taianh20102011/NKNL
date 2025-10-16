@@ -8,15 +8,12 @@
   <style>
     .page { padding: 36px 20px; max-width:1100px; margin: 0 auto; }
     .missions-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:18px; }
-    .mission-card { padding:14px; border-radius:12px; background:var(--card); border:1px solid var(--border); }
+    .mission-card { padding:14px; border-radius:12px; background:var(--card); border:1px solid var(--border); transition:all 0.3s; }
+    .mission-card:hover { transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,0.15); }
     .small-muted { color:var(--muted); font-size:0.95rem; }
-    .xp-banner { margin-top:10px; display:flex; gap:12px; align-items:center; justify-content:space-between;}
-    .btn { padding:8px 10px; border-radius:8px; border:none; cursor:pointer; }
-    .btn[disabled]{ opacity:0.5; cursor:not-allowed; }
-    .msg { padding:10px; border-radius:10px; margin-bottom:8px; background: rgba(0,0,0,0.06); }
-    .leaderboard-list { list-style:none; padding:0; margin:0;}
-    .leaderboard-list li { padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
-    .goto-btn { margin-left:8px; background:transparent;border:1px solid var(--accent); color:var(--accent); padding:6px 10px; border-radius:8px; }
+    .goto-btn { background:transparent;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:8px;cursor:pointer; }
+    .goto-btn:hover { background:var(--accent);color:white; }
+    .mission-btn[disabled]{opacity:0.6;cursor:not-allowed;}
   </style>
 </head>
 <body>
@@ -27,32 +24,33 @@
       <a href="index.html">Trang chủ</a>
       <a href="journal.html">Nhật ký</a>
       <a href="features.html">Tính năng</a>
-      <a href="missions.html">Nhiệm vụ</a>
+      <a href="missions.html" class="active">Nhiệm vụ</a>
       <a href="profile.html">Hồ sơ</a>
     </nav>
-    <div class="hamburger" id="hamburger">☰</div>
+    <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
   </div>
 </header>
+
 <main class="page">
   <h1>🎯 Nhiệm vụ & XP</h1>
+  <p class="small-muted">Hoàn thành nhiệm vụ để nhận XP, mở huy hiệu và leo bảng xếp hạng.</p>
+
   <div class="xp-banner">
     <div>
       <div class="small-muted">Tổng XP</div>
-      <div style="font-weight:800"><span id="xpValue">0</span> XP <span id="unlockBadge" style="display:none;color:var(--accent)"></span></div>
+      <div style="font-weight:800"><span id="xpValue">0</span> XP <span id="unlockBadge" style="display:none;color:var(--accent)">· Mở khóa AI!</span></div>
       <div class="small-muted">Cấp bậc: <span id="rankLabel">Người khởi đầu</span></div>
     </div>
-    <div>
-      <button id="loginQuick" class="btn">Đăng nhập</button>
-    </div>
+    <button id="loginQuick" class="btn">Đăng nhập</button>
   </div>
 
-  <h3 style="margin-top:18px">Nhiệm vụ Tuần này</h3>
+  <h3 style="margin-top:18px">🎮 Nhiệm vụ Tuần này</h3>
   <div class="missions-grid" id="missionsGrid"></div>
 
   <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:18px">
     <div class="mission-card">
       <h3>💬 Góc ẩn danh</h3>
-      <input id="anonNick" placeholder="Biệt danh (tùy chọn)" style="width:100%;padding:8px;border-radius:6px;margin-top:8px" />
+      <input id="anonNick" placeholder="Biệt danh (tùy chọn)" style="width:100%;padding:8px;border-radius:6px;margin-top:8px">
       <textarea id="anonText" placeholder="Viết gì đó..." style="width:100%;margin-top:8px;padding:8px;border-radius:6px"></textarea>
       <div style="margin-top:8px"><button id="sendAnon" class="btn">Gửi</button></div>
       <div id="messagesBox" style="margin-top:12px;max-height:220px;overflow:auto"></div>
@@ -60,251 +58,150 @@
 
     <aside class="mission-card">
       <h3>🏆 Bảng xếp hạng</h3>
-      <ul id="leaderboard" class="leaderboard-list"></ul>
+      <ul id="leaderboard" style="list-style:none;padding:0;margin:0"></ul>
     </aside>
   </div>
 </main>
 
+<footer class="footer">© 2025 Nhật ký Năng lực</footer>
+
 <script type="module">
-import { auth, db } from 'main.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
-      authDomain: "nknl-d7b54.firebaseapp.com",
-      projectId: "nknl-d7b54",
-      storageBucket: "nknl-d7b54.firebasestorage.app",
-      messagingSenderId: "792185587281",
-      appId: "1:792185587281:web:585e98f2f87d7d59031a70"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
+  authDomain: "nknl-d7b54.firebaseapp.com",
+  projectId: "nknl-d7b54",
+  storageBucket: "nknl-d7b54.firebasestorage.app",
+  messagingSenderId: "792185587281",
+  appId: "1:792185587281:web:585e98f2f87d7d59031a70"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-import { markMissionDone } from 'missionsTracker.js';
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 const missions = [
-  { id: 'm1', title: 'Học 20 từ mới', xp: 10, link: 'growth.html' },
-  { id: 'm2', title: 'Viết 3 dòng cảm nhận', xp: 5, link: 'journal.html' },
-  { id: 'm3', title: 'Nộp minh chứng kỹ năng', xp: 20, link: 'featuress.html' },
-  { id: 'm4', title: 'Đánh giá 1 bạn khác', xp: 5, link: 'profile.html' }
+  { id:'m1', title:'🧠 Viết 3 dòng cảm nhận', xp:10, link:'journal.html' },
+  { id:'m2', title:'📸 Nộp minh chứng kỹ năng', xp:20, link:'features.html' },
+  { id:'m3', title:'🎯 Học 20 từ mới', xp:15, link:'growth.html' },
+  { id:'m4', title:'💬 Đánh giá 1 bạn khác', xp:10, link:'profile.html' }
 ];
 
-const LS_COMPLETE = 'missions_complete_local';
-const LS_XP = 'missions_xp_local';
+let currentUser=null;
+let userState = JSON.parse(localStorage.getItem('missions_state') || '{}');
+let localXP = Number(localStorage.getItem('xp_local') || '0');
 
-const grid = document.getElementById('missionsGrid');
-const xpValueEl = document.getElementById('xpValue');
-const rankLabel = document.getElementById('rankLabel');
-const unlockBadge = document.getElementById('unlockBadge');
-const messagesBox = document.getElementById('messagesBox');
-const leaderboardEl = document.getElementById('leaderboard');
-
-let currentUser = null;
-
-async function loadUserState() {
-  let completed = JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}");
-  let xp = Number(localStorage.getItem(LS_XP) || "0");
-  if (currentUser) {
-    try {
-      const uRef = doc(db, 'users', currentUser.uid);
-      const uSnap = await getDoc(uRef);
-      if (uSnap.exists()) {
-        const d = uSnap.data();
-        completed = d.completed || completed;
-        xp = d.xp || xp;
-        // sync local
-        localStorage.setItem(LS_COMPLETE, JSON.stringify(completed));
-      } else {
-        // create user doc with existing local xp/state
-        await setDoc(uRef, { xp, completed }, { merge: true });
-      }
-    } catch (err) {
-      console.error('loadUserState err', err);
-    }
-  }
-  updateXPUI(xp);
-  renderMissions(completed);
+function updateXPUI(xp){
+  document.getElementById('xpValue').textContent = xp;
+  const unlock = document.getElementById('unlockBadge');
+  const rank = document.getElementById('rankLabel');
+  unlock.style.display = xp>=50 ? 'inline':'none';
+  rank.textContent = xp>=200?'Chuyên gia':xp>=100?'Thành thạo':xp>=50?'Người học tích cực':xp>=20?'Khám phá':'Người khởi đầu';
 }
 
-function updateXPUI(xp) {
-  xpValueEl.textContent = xp;
-  unlockBadge.style.display = xp >= 50 ? 'inline' : 'none';
-  if (xp >= 200) rankLabel.textContent = 'Chuyên gia';
-  else if (xp >= 100) rankLabel.textContent = 'Thành thạo';
-  else if (xp >= 50) rankLabel.textContent = 'Người học tích cực';
-  else if (xp >= 20) rankLabel.textContent = 'Khám phá';
-  else rankLabel.textContent = 'Người khởi đầu';
-}
-
-function renderMissions(completed) {
-  const map = completed || {};
-  grid.innerHTML = '';
-  missions.forEach(m => {
-    const s = map[m.id] || { done: false, claimed: false };
-    const card = document.createElement('div');
-    card.className = 'mission-card';
-    const status = s.claimed ? '✅ Đã nhận XP' : (s.done ? '🕓 Đã hoàn thành — Chưa nhận' : '🔒 Chưa hoàn thành');
-    const btnDisabled = !s.done || s.claimed;
-    card.innerHTML = `
+function renderMissions(){
+  const grid=document.getElementById('missionsGrid');
+  grid.innerHTML='';
+  missions.forEach(m=>{
+    const state = userState[m.id] || {done:false,claimed:false};
+    const card=document.createElement('div');
+    card.className='mission-card'+(state.done&&!state.claimed?' active-mission':'');
+    const status = state.claimed ? '✅ Đã nhận XP' : (state.done?'🕓 Đã hoàn thành — Chưa nhận':'🔒 Chưa hoàn thành');
+    card.innerHTML=`
       <h4>${m.title}</h4>
       <div class="small-muted">${status}</div>
       <div style="margin-top:10px">
-        <button class="btn claim-btn" data-id="${m.id}" ${btnDisabled ? 'disabled' : ''}>Nhận ${m.xp} XP</button>
+        <button class="btn mission-btn" data-id="${m.id}" ${(!state.done||state.claimed)?'disabled':''}>Nhận ${m.xp} XP</button>
         <button class="goto-btn" data-link="${m.link}">Đến nhiệm vụ</button>
-      </div>
-    `;
+      </div>`;
     grid.appendChild(card);
   });
 
-  // attach events
   grid.querySelectorAll('.goto-btn').forEach(b=>{
-    b.addEventListener('click', e => {
-      const l = e.currentTarget.dataset.link;
-      window.location.href = l;
-    });
+    b.addEventListener('click',()=>location.href=b.dataset.link);
   });
-
-  grid.querySelectorAll('.claim-btn').forEach(b=>{
-    b.addEventListener('click', async e=>{
-      const id = e.currentTarget.dataset.id;
-      await claimXP(id);
-    });
+  grid.querySelectorAll('.mission-btn').forEach(b=>{
+    b.addEventListener('click',()=>claimXP(b.dataset.id));
   });
 }
 
-async function claimXP(missionId) {
-  // read latest completed map
-  const localMap = JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}");
-  const state = localMap[missionId] || { done:false, claimed:false };
-  if (!state.done) return alert('Bạn chưa hoàn thành nhiệm vụ, hãy làm nhiệm vụ trước khi nhận XP.');
-  if (state.claimed) return alert('Bạn đã nhận XP cho nhiệm vụ này rồi.');
-  const mission = missions.find(m => m.id === missionId);
-  if (!mission) return;
-  // optimistic: set claimed locally
-  localMap[missionId] = { done: true, claimed: true };
-  localStorage.setItem(LS_COMPLETE, JSON.stringify(localMap));
-  if (currentUser) {
-    try {
-      const uRef = doc(db, 'users', currentUser.uid);
-      const uSnap = await getDoc(uRef);
-      const prev = uSnap.exists() ? (uSnap.data().xp || 0) : 0;
-      const newXP = prev + mission.xp;
-      await setDoc(uRef, { xp: newXP, completed: localMap }, { merge: true });
-      await setDoc(doc(db,'leaderboard', currentUser.uid), { uid: currentUser.uid, name: currentUser.email || currentUser.displayName, xp: newXP, updatedAt: new Date().toISOString() }, { merge: true });
-      updateXPUI(newXP);
-    } catch (err) {
-      console.error('claimXP err', err);
-      // rollback local claimed
-      const rollback = JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}");
-      if (rollback[missionId]) rollback[missionId].claimed = false;
-      localStorage.setItem(LS_COMPLETE, JSON.stringify(rollback));
-      return alert('Không thể nhận XP lúc này. Vui lòng thử lại.');
+async function claimXP(id){
+  const s=userState[id]||{done:false,claimed:false};
+  if(!s.done) return alert('Bạn chưa hoàn thành nhiệm vụ!');
+  if(s.claimed) return alert('Bạn đã nhận XP rồi!');
+  const m=missions.find(x=>x.id===id); if(!m) return;
+
+  s.claimed=true;
+  userState[id]=s;
+  localStorage.setItem('missions_state',JSON.stringify(userState));
+
+  if(currentUser){
+    const ref=doc(db,'users',currentUser.uid);
+    const snap=await getDoc(ref);
+    const prev=snap.exists()?snap.data().xp||0:0;
+    const newXP=prev+m.xp;
+    await setDoc(ref,{xp:newXP,missions:userState},{merge:true});
+    await setDoc(doc(db,'leaderboard',currentUser.uid),{name:currentUser.email||'Người dùng',xp:newXP},{merge:true});
+    updateXPUI(newXP);
+  }else{
+    localXP+=m.xp;
+    localStorage.setItem('xp_local',localXP);
+    updateXPUI(localXP);
+  }
+  renderMissions();
+  alert(`+${m.xp} XP!`);
+}
+
+// góc ẩn danh
+document.getElementById('sendAnon').addEventListener('click',async()=>{
+  const nick=document.getElementById('anonNick').value.trim()||'Ẩn danh';
+  const text=document.getElementById('anonText').value.trim();
+  if(!text) return alert('Hãy viết gì đó!');
+  await addDoc(collection(db,'anonMessages'),{nick,text,createdAt:new Date()});
+  document.getElementById('anonText').value='';
+});
+onSnapshot(query(collection(db,'anonMessages'),orderBy('createdAt','desc'),limit(20)),snap=>{
+  const box=document.getElementById('messagesBox');
+  box.innerHTML='';
+  snap.forEach(d=>{
+    const v=d.data();
+    const div=document.createElement('div');
+    div.className='msg';
+    div.innerHTML=`<b>${v.nick}</b><br>${v.text}`;
+    box.appendChild(div);
+  });
+});
+
+// bảng xếp hạng
+onSnapshot(query(collection(db,'leaderboard'),orderBy('xp','desc'),limit(10)),snap=>{
+  const lb=document.getElementById('leaderboard');
+  lb.innerHTML='';
+  snap.forEach(d=>{
+    const v=d.data();
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${v.name||'Người'}</span><b>${v.xp||0} XP</b>`;
+    lb.appendChild(li);
+  });
+});
+
+// xác thực
+onAuthStateChanged(auth,async u=>{
+  currentUser=u;
+  if(currentUser){
+    const ref=doc(db,'users',u.uid);
+    const snap=await getDoc(ref);
+    if(snap.exists()){
+      const d=snap.data();
+      userState=d.missions||userState;
+      updateXPUI(d.xp||0);
     }
-  } else {
-    // local fallback xp
-    let cur = Number(localStorage.getItem(LS_XP) || "0");
-    cur += mission.xp;
-    localStorage.setItem(LS_XP, String(cur));
-    updateXPUI(cur);
-  }
-
-  renderMissions(JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}"));
-  alert(`Bạn nhận được ${mission.xp} XP!`);
-}
-
-// anon chat
-document.getElementById('sendAnon').addEventListener('click', async ()=>{
-  const text = document.getElementById('anonText').value.trim();
-  const nick = document.getElementById('anonNick').value.trim() || 'Ẩn danh';
-  if (!text) return alert('Nhập tin nhắn trước khi gửi');
-  try {
-    await addDoc(collection(db,'anonMessages'), { nick, text, createdAt: new Date() });
-    document.getElementById('anonText').value = '';
-  } catch (err) {
-    console.error('sendAnon err', err);
-    alert('Gửi thất bại');
-  }
+  }else updateXPUI(localXP);
+  renderMissions();
 });
-
-// realtime messages
-onSnapshot(query(collection(db,'anonMessages'), orderBy('createdAt','desc'), limit(30)), snap => {
-  messagesBox.innerHTML = '';
-  const rows = [];
-  snap.forEach(d => rows.push(d.data()));
-  rows.reverse().forEach(r => {
-    const div = document.createElement('div');
-    div.className = 'msg';
-    div.innerHTML = `<div style="font-size:12px;color:var(--muted)">${r.nick} · ${r.createdAt?.toDate ? r.createdAt.toDate().toLocaleString() : ''}</div><div style="margin-top:6px">${r.text}</div>`;
-    messagesBox.appendChild(div);
-  });
-});
-
-// leaderboard realtime
-onSnapshot(query(collection(db,'leaderboard'), orderBy('xp','desc'), limit(10)), snap => {
-  leaderboardEl.innerHTML = '';
-  snap.forEach(d => {
-    const v = d.data();
-    const li = document.createElement('li');
-    li.innerHTML = `<span>${v.name||'Người'}</span><strong>${v.xp||0} XP</strong>`;
-    leaderboardEl.appendChild(li);
-  });
-});
-
-// auth listener
-onAuthStateChanged(auth, async user => {
-  currentUser = user || null;
-  await loadUserState();
-});
-
-// quick login redirect
-document.getElementById('loginQuick').addEventListener('click', ()=> location.href='login.html');
-const q = (sel) => document.querySelector(sel);
-
-document.addEventListener("DOMContentLoaded", () => {
-  const themeToggle = q("#theme-toggle");
-  const applyTheme = (theme) => {
-    if (theme === "light") {
-      document.documentElement.setAttribute("data-theme", "light");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
-  };
-
-  let currentTheme = localStorage.getItem("theme") || "dark";
-  applyTheme(currentTheme);
-
-  if (themeToggle) {
-    themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
-
-    themeToggle.addEventListener("click", () => {
-      currentTheme = currentTheme === "light" ? "dark" : "light";
-      applyTheme(currentTheme);
-      localStorage.setItem("theme", currentTheme);
-      themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
-    });
-  }
-});
-// 🌟 Navbar toggle for mobile
-// Hamburger toggle
-const navToggle = document.getElementById("nav-toggle");
-const navMenu = document.getElementById("nav-menu");
-
-if (navToggle && navMenu) {
-  navToggle.addEventListener("click", () => {
-    navMenu.classList.toggle("mobile-open");
-  });
-}
-
-// Ẩn menu khi click bên ngoài (tuỳ chọn)
-document.addEventListener("click", (e) => {
-  if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-    navMenu.classList.remove("mobile-open");
-  }
-});
+document.getElementById('loginQuick').addEventListener('click',()=>location.href='login.html');
 </script>
 </body>
 </html>
