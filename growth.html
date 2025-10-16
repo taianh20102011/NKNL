@@ -3,50 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lộ trình năng lực — Nhật ký năng lực</title>
+<title>Lộ trình năng lực — Nhật ký Năng lực</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .page { padding: 40px; max-width: 1000px; margin:auto; }
-  .node { border:1px solid var(--border); border-radius:10px; padding:10px 16px; margin:8px; display:inline-block; background:var(--card); cursor:pointer; transition:0.2s; }
+  .lead { opacity: 0.8; margin-bottom: 24px; }
+  .tree { display:flex; flex-wrap:wrap; justify-content:center; gap:16px; }
+  .node {
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 20px;
+    width:200px;
+    background:var(--card);
+    cursor:pointer;
+    transition:all 0.25s ease;
+    text-align:center;
+  }
   .node:hover { background:var(--accent); color:white; transform:scale(1.05); }
-  .tree { display:flex; flex-wrap:wrap; justify-content:center; }
+  .node.locked { opacity:0.4; cursor:not-allowed; }
+  .node.unlocked { box-shadow:0 0 10px rgba(79,70,229,0.3); }
   .line { width:2px; background:var(--border); height:40px; margin:auto; }
+  #notify { text-align:center; margin-top:20px; font-weight:600; }
 </style>
 </head>
 <body>
-    <header class="nav">
+  <header class="nav">
     <div class="container nav-inner">
-
-    <div class="nav-inner">
       <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
-    <!-- Hamburger button -->
-    <button id="nav-toggle" class="hamburger" aria-label="Mở menu">☰</button>
+      <button id="nav-toggle" class="hamburger" aria-label="Mở menu">☰</button>
       <div class="menu" id="nav-menu">
-      <a href="index.html">Trang chủ</a>
-      <a href="journal.html">Nhật ký</a>
-      <a href="features.html">Tính năng</a>
-      <a href="missions.html">Nhiệm vụ</a>
-      <a href="profile.html">Hồ sơ</a>
+        <a href="index.html">Trang chủ</a>
+        <a href="journal.html">Nhật ký</a>
+        <a href="features.html">Tính năng</a>
+        <a href="missions.html">Nhiệm vụ</a>
+        <a href="profile.html">Hồ sơ</a>
+        <a href="growth.html" class="active">Lộ trình</a>
         <a href="login.html" id="logout-btn">Đăng xuất</a>
       </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Đổi giao diện">🌙</button>
     </div>
-      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
-    </div>
-  </header> 
+  </header>
 
-  <section class="page">
+  <main class="page">
     <h1>🌳 Lộ trình phát triển năng lực</h1>
     <p class="lead">Khám phá hành trình kỹ năng của bạn và mở khóa bước tiếp theo!</p>
-
-    <div class="tree" id="growthTree">
-      <!-- sẽ render bằng JS -->
-    </div>
-  </section>
+    <div class="tree" id="growthTree"></div>
+    <p id="notify"></p>
+  </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+    import { markMissionDone } from "./missionsTracker.js"; // liên kết nhiệm vụ
 
     const firebaseConfig = {
       apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
@@ -57,86 +66,78 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const growthTree = document.getElementById('growthTree');
+    const growthTree = document.getElementById("growthTree");
+    const notify = document.getElementById("notify");
+
     const skillPath = [
-      { id:1, title:"Bắt đầu hành trình 🌱", xp:0, unlocked:true },
-      { id:2, title:"Rèn luyện phản chiếu 💬", xp:50 },
-      { id:3, title:"Phát triển cảm xúc ❤️", xp:100 },
-      { id:4, title:"Lãnh đạo bản thân 🌟", xp:200 },
+      { id: 1, title: "Bắt đầu hành trình 🌱", xp: 0 },
+      { id: 2, title: "Rèn luyện phản chiếu 💬", xp: 50 },
+      { id: 3, title: "Phát triển cảm xúc ❤️", xp: 100 },
+      { id: 4, title: "Lãnh đạo bản thân 🌟", xp: 200 },
     ];
 
-    function renderTree(xp){
-      growthTree.innerHTML='';
-      skillPath.forEach(s=>{
-        const node=document.createElement('div');
-        node.className='node';
-        const unlocked = xp>=s.xp;
-        node.innerHTML = `${s.title}<br><small>${unlocked?"✅ Hoàn thành":"🔒 Cần "+s.xp+" XP"}</small>`;
-        node.style.opacity=unlocked?1:0.5;
+    function renderTree(xp) {
+      growthTree.innerHTML = "";
+      skillPath.forEach((s) => {
+        const node = document.createElement("div");
+        const unlocked = xp >= s.xp;
+        node.className = `node ${unlocked ? "unlocked" : "locked"}`;
+        node.innerHTML = `
+          <div>${s.title}</div>
+          <small>${unlocked ? "✅ Hoàn thành" : "🔒 Cần " + s.xp + " XP"}</small>
+        `;
+        if (unlocked) {
+          node.addEventListener("click", async () => {
+            await markMissionDone("growth_" + s.id);
+            notify.textContent = `🎯 Bạn vừa mở khóa: ${s.title}!`;
+            setTimeout(() => (notify.textContent = ""), 3000);
+          });
+        }
         growthTree.appendChild(node);
       });
     }
 
-    onAuthStateChanged(auth, async user=>{
-      let xp=Number(localStorage.getItem('missions_xp_local')||0);
-      if(user){
-        const docRef=doc(db,'users',user.uid);
-        const snap=await getDoc(docRef);
-        xp=snap.exists()? (snap.data().xp||0):xp;
+    // Lấy XP hiện tại
+    onAuthStateChanged(auth, async (user) => {
+      let xp = Number(localStorage.getItem("missions_xp_local") || 0);
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const snap = await getDoc(docRef);
+        xp = snap.exists() ? snap.data().xp || xp : xp;
       }
       renderTree(xp);
     });
-    const q = (sel) => document.querySelector(sel);
 
-document.addEventListener("DOMContentLoaded", () => {
-  const themeToggle = q("#theme-toggle");
-  const applyTheme = (theme) => {
-    if (theme === "light") {
-      document.documentElement.setAttribute("data-theme", "light");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
-  };
-
-  let currentTheme = localStorage.getItem("theme") || "dark";
-  applyTheme(currentTheme);
-
-  if (themeToggle) {
+    // 🌙 Giao diện sáng/tối
+    const themeToggle = document.getElementById("theme-toggle");
+    let currentTheme = localStorage.getItem("theme") || "dark";
+    const applyTheme = (theme) => {
+      if (theme === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+    };
+    applyTheme(currentTheme);
     themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
-
     themeToggle.addEventListener("click", () => {
       currentTheme = currentTheme === "light" ? "dark" : "light";
       applyTheme(currentTheme);
       localStorage.setItem("theme", currentTheme);
       themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
     });
-  }
-});
-// 🌟 Navbar toggle for mobile
-// Hamburger toggle
-const navToggle = document.getElementById("nav-toggle");
-const navMenu = document.getElementById("nav-menu");
 
-if (navToggle && navMenu) {
-  navToggle.addEventListener("click", () => {
-    navMenu.classList.toggle("mobile-open");
-  });
-}
-
-// Ẩn menu khi click bên ngoài (tuỳ chọn)
-document.addEventListener("click", (e) => {
-  if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-    navMenu.classList.remove("mobile-open");
-  }
-});
-import { markMissionDone } from 'missionsTracker.js';
-
-document.getElementById('addGoal').addEventListener('click', async ()=>{
-  // for demo: clicking means user "completed" a micro-activity => mark mission m1
-  await markMissionDone('m1'); // mark "Học 20 từ mới" done
-  alert('Hoàn thành hoạt động — nhiệm vụ đã được ghi nhận!');
-});
-
+    // 📱 Navbar mobile toggle
+    const navToggle = document.getElementById("nav-toggle");
+    const navMenu = document.getElementById("nav-menu");
+    navToggle.addEventListener("click", () => {
+      navMenu.classList.toggle("mobile-open");
+    });
+    document.addEventListener("click", (e) => {
+      if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+        navMenu.classList.remove("mobile-open");
+      }
+    });
   </script>
 </body>
 </html>
