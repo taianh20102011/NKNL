@@ -10,15 +10,15 @@
 </main>
 
 <script type="module">
-import { markMissionDone } from './missionsTracker.js';
-document.getElementById('submitEvidence').addEventListener('click', async ()=>{
-  const t = document.getElementById('evidence').value.trim();
-  if(!t) return alert('Nhập mô tả minh chứng!');
-  // For demo: we consider submission as completing m3
-  await markMissionDone('m3');
-  alert('Nộp thành công — nhiệm vụ đã được ghi nhận!');
-  document.getElementById('evidence').value = '';
+import { markMissionDone } from "missionsTracker.js";
+
+document.getElementById("submitProof")?.addEventListener("click", async () => {
+  const proof = document.getElementById("proofInput")?.value || "";
+  if (!proof) return alert("Hãy tải hoặc nhập minh chứng trước!");
+  await markMissionDone("m2");
+  console.log("✅ Đã đánh dấu hoàn thành nhiệm vụ: Nộp minh chứng kỹ năng (m2)");
 });
+
 </script>
 </body>
 </html>
