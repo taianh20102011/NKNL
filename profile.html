@@ -1,120 +1,62 @@
 <!doctype html>
 <html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hồ sơ cá nhân — Nhật ký năng lực</title>
-<link rel="stylesheet" href="style.css">
-<style>
-  .profile-box { max-width:600px;margin:40px auto;padding:24px;border-radius:16px;background:var(--card);border:1px solid var(--border);text-align:center; }
-  .xp-bar { height:10px;border-radius:5px;background:#ccc;overflow:hidden;margin-top:10px;}
-  .xp-fill { height:10px;background:var(--accent);width:0%;transition:width 0.5s;}
-  .badges { display:flex;justify-content:center;flex-wrap:wrap;margin-top:20px;gap:10px;}
-  .badge { background:var(--accent);color:#fff;padding:8px 12px;border-radius:12px; }
-</style>
-</head>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Hồ sơ</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header class="nav">
-  <div class="container nav-inner">
-    <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
-    <div class="menu">
-      <a href="missions.html">Nhiệm vụ</a>
-      <a href="growth.html">Lộ trình</a>
-      <a href="profile.html" class="active">Hồ sơ</a>
-    </div>
-  </div>
-</header>
-
-<section class="profile-box">
-  <h1 id="profileName">Người dùng</h1>
-  <p>Cấp bậc: <b id="rankTitle">...</b></p>
-  <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
-  <p><span id="xpValue">0</span> XP</p>
-  <div class="badges" id="badgeBox"></div>
-</section>
+<header class="nav"><div class="container nav-inner"><a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a></div></header>
+<main class="page">
+  <h1>👤 Hồ sơ</h1>
+  <div id="nameBox">Người dùng</div>
+  <div style="margin-top:12px">XP: <span id="xpBox">0</span></div>
+  <div style="margin-top:8px">Cấp bậc: <span id="rankBox">Người khởi đầu</span></div>
+  <div style="margin-top:12px" id="badgesBox"></div>
+  <div style="margin-top:12px"><button id="syncBtn" class="btn">Đồng bộ hiển thị</button></div>
+</main>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { auth, db } from './main.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-const firebaseConfig = { apiKey:"AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg", authDomain:"nknl-d7b54.firebaseapp.com", projectId:"nknl-d7b54" };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const xpBox = document.getElementById('xpBox');
+const rankBox = document.getElementById('rankBox');
+const badgesBox = document.getElementById('badgesBox');
+const nameBox = document.getElementById('nameBox');
 
 function getRank(xp){
-  if(xp>=200) return "Người định hình năng lực 🌟";
-  if(xp>=100) return "Nhà phản chiếu sâu sắc 💡";
-  if(xp>=50) return "Người học tích cực 💪";
-  return "Người khởi đầu 🌱";
+  if(xp>=200) return 'Chuyên gia';
+  if(xp>=100) return 'Thành thạo';
+  if(xp>=50) return 'Người học tích cực';
+  if(xp>=20) return 'Khám phá';
+  return 'Người khởi đầu';
 }
 
-function renderProfile(name,xp){
-  document.getElementById('profileName').textContent = name;
-  document.getElementById('xpValue').textContent = xp;
-  document.getElementById('rankTitle').textContent = getRank(xp);
-  document.getElementById('xpFill').style.width = Math.min(xp/200*100,100)+'%';
-  const badges=[];
-  if(xp>=50) badges.push("🏅 Người học tích cực");
-  if(xp>=100) badges.push("🎖 Nhà phản chiếu sâu sắc");
-  if(xp>=200) badges.push("👑 Định hình năng lực");
-  document.getElementById('badgeBox').innerHTML = badges.map(b=>`<div class='badge'>${b}</div>`).join('');
+async function refreshProfile(){
+  let xp = Number(localStorage.getItem('missions_xp_local')||0);
+  let name = 'Khách';
+  const user = auth.currentUser;
+  if (user) {
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      xp = d.xp || xp;
+      name = d.displayName || user.email || name;
+    } else name = user.email || name;
+  }
+  xpBox.textContent = xp;
+  rankBox.textContent = getRank(xp);
+  nameBox.textContent = name;
+  const badges = [];
+  if (xp>=50) badges.push('🏅 Người học tích cực');
+  if (xp>=100) badges.push('🎖 Nhà phản chiếu sâu sắc');
+  if (xp>=200) badges.push('👑 Định hình năng lực');
+  badgesBox.innerHTML = badges.map(b=>`<div style="display:inline-block;margin-right:8px">${b}</div>`).join('');
 }
 
-onAuthStateChanged(auth, async user=>{
-  let xp=Number(localStorage.getItem('missions_xp_local')||0);
-  let name="Khách ẩn danh";
-  if(user){
-    const snap=await getDoc(doc(db,'users',user.uid));
-    if(snap.exists()){ xp=snap.data().xp||xp; name=user.email||"Người dùng"; }
-  }
-  renderProfile(name,xp);
+document.getElementById('syncBtn').addEventListener('click', refreshProfile);
+
+onAuthStateChanged(auth, user => {
+  refreshProfile();
 });
-  const q = (sel) => document.querySelector(sel);
-
-document.addEventListener("DOMContentLoaded", () => {
-  const themeToggle = q("#theme-toggle");
-  const applyTheme = (theme) => {
-    if (theme === "light") {
-      document.documentElement.setAttribute("data-theme", "light");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
-  };
-
-  let currentTheme = localStorage.getItem("theme") || "dark";
-  applyTheme(currentTheme);
-
-  if (themeToggle) {
-    themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
-
-    themeToggle.addEventListener("click", () => {
-      currentTheme = currentTheme === "light" ? "dark" : "light";
-      applyTheme(currentTheme);
-      localStorage.setItem("theme", currentTheme);
-      themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
-    });
-  }
-});
-// 🌟 Navbar toggle for mobile
-// Hamburger toggle
-const navToggle = document.getElementById("nav-toggle");
-const navMenu = document.getElementById("nav-menu");
-
-if (navToggle && navMenu) {
-  navToggle.addEventListener("click", () => {
-    navMenu.classList.toggle("mobile-open");
-  });
-}
-
-// Ẩn menu khi click bên ngoài (tuỳ chọn)
-document.addEventListener("click", (e) => {
-  if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-    navMenu.classList.remove("mobile-open");
-  }
-});
-
 </script>
 </body>
 </html>
