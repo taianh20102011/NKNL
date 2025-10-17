@@ -83,154 +83,207 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ------------------------
-// 🎯 Nhiệm vụ hệ thống
-// ------------------------
-const missions = [
-  { id:'m1', title:'🧠 Viết 3 dòng cảm nhận', xp:10, link:'journal.html' },
-  { id:'m2', title:'📸 Nộp minh chứng kỹ năng', xp:20, link:'featuress.html' },
-  { id:'m3', title:'🎯 Học 20 từ mới', xp:15, link:'growth.html' },
-  { id:'m4', title:'💬 Đánh giá 1 bạn khác', xp:10, link:'profile.html' }
+// 🎯 Danh sách nhiệm vụ
+const missionsList = [
+  { id: 'm1', title: '🧠 Viết 3 dòng cảm nhận', xp: 10, link: 'journal.html' },
+  { id: 'm2', title: '📸 Nộp minh chứng kỹ năng', xp: 20, link: 'featuress.html' },
+  { id: 'm3', title: '🎯 Học 20 từ mới', xp: 15, link: 'growth.html' },
+  { id: 'm4', title: '💬 Đánh giá 1 bạn khác', xp: 10, link: 'profile.html' }
 ];
 
-let currentUser=null;
-let userState=JSON.parse(localStorage.getItem('missions_state')||'{}');
-let localXP=Number(localStorage.getItem('xp_local')||'0');
+let currentUser = null;
+let userMissions = {};
+let userXP = 0;
 
-function updateXPUI(xp){
-  document.getElementById('xpValue').textContent = xp;
-  document.getElementById('unlockBadge').style.display = xp>=50?'inline':'none';
-  document.getElementById('rankLabel').textContent =
-    xp>=200?'Chuyên gia':xp>=100?'Thành thạo':xp>=50?'Người học tích cực':xp>=20?'Khám phá':'Người khởi đầu';
+// -----------------------------
+// 🚀 Cập nhật giao diện XP
+// -----------------------------
+function updateXPUI(xp) {
+  const xpVal = document.getElementById('xpValue');
+  const rankLabel = document.getElementById('rankLabel');
+  const unlockBadge = document.getElementById('unlockBadge');
+
+  if (!xpVal) return;
+  xpVal.textContent = xp;
+  unlockBadge.style.display = xp >= 50 ? 'inline' : 'none';
+  rankLabel.textContent =
+    xp >= 200 ? 'Chuyên gia' :
+    xp >= 100 ? 'Thành thạo' :
+    xp >= 50 ? 'Người học tích cực' :
+    xp >= 20 ? 'Khám phá' : 'Người khởi đầu';
 }
 
-function renderMissions(){
-  const grid=document.getElementById('missionsGrid');
-  grid.innerHTML='';
-  missions.forEach(m=>{
-    const s=userState[m.id]||{done:false,claimed:false};
-    const canClaim=s.done&&!s.claimed;
-    const status=s.claimed?'✅ Đã nhận XP':(s.done?'🕓 Đã hoàn thành — Chưa nhận':'🔒 Chưa hoàn thành');
-    const card=document.createElement('div');
-    card.className='mission-card';
-    card.innerHTML=`
+// -----------------------------
+// 🧩 Hiển thị danh sách nhiệm vụ
+// -----------------------------
+function renderMissions() {
+  const grid = document.getElementById('missionsGrid');
+  grid.innerHTML = '';
+
+  missionsList.forEach(m => {
+    const s = userMissions[m.id] || { done: false, claimed: false };
+    const canClaim = s.done && !s.claimed;
+    const status = s.claimed
+      ? '✅ Đã nhận XP'
+      : s.done
+      ? '🕓 Đã hoàn thành — Chưa nhận'
+      : '🔒 Chưa hoàn thành';
+
+    const card = document.createElement('div');
+    card.className = 'mission-card';
+    card.innerHTML = `
       <h4>${m.title}</h4>
       <p class="small-muted">${status}</p>
       <div style="margin-top:10px">
-        <button class="btn mission-btn" data-id="${m.id}" ${canClaim?'':'disabled'}>Nhận ${m.xp} XP</button>
+        <button class="btn mission-btn" data-id="${m.id}" ${canClaim ? '' : 'disabled'}>
+          Nhận ${m.xp} XP
+        </button>
         <button class="goto-btn" onclick="location.href='${m.link}'">Đến nhiệm vụ</button>
-      </div>`;
+      </div>
+    `;
     grid.appendChild(card);
   });
-  grid.querySelectorAll('.mission-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>claimXP(btn.dataset.id));
+
+  grid.querySelectorAll('.mission-btn').forEach(btn => {
+    btn.addEventListener('click', () => claimXP(btn.dataset.id));
   });
 }
 
+// -----------------------------
+// 🎁 Nhận XP
+// -----------------------------
 async function claimXP(id) {
-  const s = userState[id] || { done: false, claimed: false };
-  if (!s.done) return alert('❌ Bạn chưa hoàn thành nhiệm vụ này!');
-  if (s.claimed) return alert('⚠️ Bạn đã nhận XP rồi!');
-
-  const m = missions.find(x => x.id === id);
-  if (!m) return;
-
-  // Đảm bảo người dùng chỉ nhận được XP 1 lần / nhiệm vụ
-  s.claimed = true;
-  userState[id] = s;
-  localStorage.setItem('missions_state', JSON.stringify(userState));
-
-  if (currentUser) {
-    const ref = doc(db, 'users', currentUser.uid);
-    const snap = await getDoc(ref);
-    const prevXP = snap.exists() ? (snap.data().xp || 0) : 0;
-    const xp = prevXP + m.xp;
-    await setDoc(ref, { xp, missions: userState }, { merge: true });
-    updateXPUI(xp);
-  } else {
-    localXP += m.xp;
-    localStorage.setItem('xp_local', localXP);
-    updateXPUI(localXP);
+  const user = auth.currentUser;
+  if (!user) {
+    alert('⚠️ Hãy đăng nhập để nhận XP!');
+    return;
   }
 
+  const ref = doc(db, 'users', user.uid);
+  const snap = await getDoc(ref);
+  const data = snap.exists() ? snap.data() : {};
+  const missions = data.missions || {};
+  const xp = data.xp || 0;
+
+  const mission = missions[id];
+  const missionData = missionsList.find(m => m.id === id);
+
+  if (!mission || !mission.done) {
+    alert('❌ Bạn chưa hoàn thành nhiệm vụ này!');
+    return;
+  }
+  if (mission.claimed) {
+    alert('⚠️ Bạn đã nhận XP rồi!');
+    return;
+  }
+
+  const newXP = xp + (missionData?.xp || 0);
+  missions[id].claimed = true;
+
+  await setDoc(ref, { xp: newXP, missions }, { merge: true });
+  userMissions = missions;
+  userXP = newXP;
+  updateXPUI(newXP);
   renderMissions();
-  alert(`🎉 Nhiệm vụ ${m.title} hoàn thành! +${m.xp} XP`);
+
+  alert(`🎉 Nhận ${missionData.xp} XP thành công cho nhiệm vụ "${missionData.title}"!`);
 }
 
-
-// 💬 Góc ẩn danh
-document.getElementById('sendAnon').addEventListener('click',async()=>{
-  const nick=document.getElementById('anonNick').value.trim()||'Ẩn danh';
-  const text=document.getElementById('anonText').value.trim();
-  if(!text) return alert('Hãy viết gì đó!');
-  await addDoc(collection(db,'anonMessages'),{nick,text,createdAt:new Date()});
-  document.getElementById('anonText').value='';
+// -----------------------------
+// 💬 Góc ẩn danh (ẩn danh chat box)
+// -----------------------------
+document.getElementById('sendAnon').addEventListener('click', async () => {
+  const nick = document.getElementById('anonNick').value.trim() || 'Ẩn danh';
+  const text = document.getElementById('anonText').value.trim();
+  if (!text) return alert('Hãy viết gì đó!');
+  await addDoc(collection(db, 'anonMessages'), { nick, text, createdAt: new Date() });
+  document.getElementById('anonText').value = '';
 });
 
-onSnapshot(query(collection(db,'anonMessages'),orderBy('createdAt','desc'),limit(20)),snap=>{
-  const box=document.getElementById('messagesBox');
-  box.innerHTML='';
-  snap.forEach(d=>{
-    const v=d.data();
-    const div=document.createElement('div');
-    div.className='msg';
-    div.innerHTML=`<b>${v.nick}</b><br>${v.text}`;
+onSnapshot(query(collection(db, 'anonMessages'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+  const box = document.getElementById('messagesBox');
+  box.innerHTML = '';
+  snap.forEach(d => {
+    const v = d.data();
+    const div = document.createElement('div');
+    div.className = 'msg';
+    div.innerHTML = `<b>${v.nick}</b><br>${v.text}`;
     box.appendChild(div);
   });
 });
 
+// -----------------------------
 // 🏆 Bảng xếp hạng
-onSnapshot(query(collection(db,'leaderboard'),orderBy('xp','desc'),limit(10)),snap=>{
-  const lb=document.getElementById('leaderboard');
-  lb.innerHTML='';
-  snap.forEach(d=>{
-    const v=d.data();
-    const li=document.createElement('li');
-    li.innerHTML=`<span>${v.name||'Người'}</span><b>${v.xp||0} XP</b>`;
+// -----------------------------
+onSnapshot(query(collection(db, 'leaderboard'), orderBy('xp', 'desc'), limit(10)), snap => {
+  const lb = document.getElementById('leaderboard');
+  lb.innerHTML = '';
+  snap.forEach(d => {
+    const v = d.data();
+    const li = document.createElement('li');
+    li.innerHTML = `<span>${v.name || 'Người dùng'}</span><b>${v.xp || 0} XP</b>`;
     lb.appendChild(li);
   });
 });
 
-// 👤 Auth
-onAuthStateChanged(auth,async u=>{
-  currentUser=u;
-  if(u){
-    const ref=doc(db,'users',u.uid);
-    const snap=await getDoc(ref);
-    if(snap.exists()){
-      userState=snap.data().missions||userState;
-      updateXPUI(snap.data().xp||0);
+// -----------------------------
+// 👤 Auth state
+// -----------------------------
+onAuthStateChanged(auth, async u => {
+  currentUser = u;
+  if (u) {
+    const ref = doc(db, 'users', u.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data();
+      userMissions = data.missions || {};
+      userXP = data.xp || 0;
+      updateXPUI(userXP);
+    } else {
+      await setDoc(ref, { xp: 0, missions: {} });
+      userMissions = {};
+      userXP = 0;
+      updateXPUI(0);
     }
-  }else updateXPUI(localXP);
+  } else {
+    userMissions = {};
+    userXP = 0;
+    updateXPUI(0);
+  }
   renderMissions();
 });
 
+// -----------------------------
 // 🌗 Theme toggle + Navbar
+// -----------------------------
 const q = s => document.querySelector(s);
-document.addEventListener("DOMContentLoaded", () => {
-  const themeToggle = q("#theme-toggle");
-  const applyTheme = t => t==="light" ? document.documentElement.setAttribute("data-theme","light")
-                                      : document.documentElement.removeAttribute("data-theme");
-  let theme=localStorage.getItem("theme")||"dark";
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggle = q('#theme-toggle');
+  const applyTheme = t =>
+    t === 'light'
+      ? document.documentElement.setAttribute('data-theme', 'light')
+      : document.documentElement.removeAttribute('data-theme');
+  let theme = localStorage.getItem('theme') || 'dark';
   applyTheme(theme);
-  if(themeToggle){
-    themeToggle.textContent=theme==="light"?"🌞":"🌙";
-    themeToggle.addEventListener("click",()=>{
-      theme=theme==="light"?"dark":"light";
+  if (themeToggle) {
+    themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
+    themeToggle.addEventListener('click', () => {
+      theme = theme === 'light' ? 'dark' : 'light';
       applyTheme(theme);
-      localStorage.setItem("theme",theme);
-      themeToggle.textContent=theme==="light"?"🌞":"🌙";
+      localStorage.setItem('theme', theme);
+      themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
     });
   }
 });
-const navToggle=document.getElementById("nav-toggle");
-const navMenu=document.getElementById("nav-menu");
-if(navToggle&&navMenu){
-  navToggle.addEventListener("click",()=>navMenu.classList.toggle("mobile-open"));
-  document.addEventListener("click",e=>{
-    if(!navMenu.contains(e.target)&&!navToggle.contains(e.target)) navMenu.classList.remove("mobile-open");
+const navToggle = document.getElementById('nav-toggle');
+const navMenu = document.getElementById('nav-menu');
+if (navToggle && navMenu) {
+  navToggle.addEventListener('click', () => navMenu.classList.toggle('mobile-open'));
+  document.addEventListener('click', e => {
+    if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) navMenu.classList.remove('mobile-open');
   });
 }
 </script>
+
 </body>
 </html>
