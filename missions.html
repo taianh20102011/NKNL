@@ -127,28 +127,36 @@ function renderMissions(){
   });
 }
 
-async function claimXP(id){
-  const s=userState[id]||{done:false,claimed:false};
-  if(!s.done) return alert('❌ Bạn chưa hoàn thành nhiệm vụ này!');
-  if(s.claimed) return alert('⚠️ Bạn đã nhận XP rồi!');
-  const m=missions.find(x=>x.id===id); if(!m) return;
+async function claimXP(id) {
+  const s = userState[id] || { done: false, claimed: false };
+  if (!s.done) return alert('❌ Bạn chưa hoàn thành nhiệm vụ này!');
+  if (s.claimed) return alert('⚠️ Bạn đã nhận XP rồi!');
 
-  s.claimed=true; userState[id]=s;
-  localStorage.setItem('missions_state',JSON.stringify(userState));
+  const m = missions.find(x => x.id === id);
+  if (!m) return;
 
-  if(currentUser){
-    const ref=doc(db,'users',currentUser.uid);
-    const snap=await getDoc(ref);
-    const xp=(snap.exists()?snap.data().xp||0:0)+m.xp;
-    await setDoc(ref,{xp,missions:userState},{merge:true});
+  // Đảm bảo người dùng chỉ nhận được XP 1 lần / nhiệm vụ
+  s.claimed = true;
+  userState[id] = s;
+  localStorage.setItem('missions_state', JSON.stringify(userState));
+
+  if (currentUser) {
+    const ref = doc(db, 'users', currentUser.uid);
+    const snap = await getDoc(ref);
+    const prevXP = snap.exists() ? (snap.data().xp || 0) : 0;
+    const xp = prevXP + m.xp;
+    await setDoc(ref, { xp, missions: userState }, { merge: true });
+    updateXPUI(xp);
   } else {
-    localXP+=m.xp;
-    localStorage.setItem('xp_local',localXP);
+    localXP += m.xp;
+    localStorage.setItem('xp_local', localXP);
+    updateXPUI(localXP);
   }
-  updateXPUI(currentUser? (await getDoc(doc(db,'users',currentUser.uid))).data().xp : localXP);
+
   renderMissions();
-  alert(`+${m.xp} XP!`);
+  alert(`🎉 Nhiệm vụ ${m.title} hoàn thành! +${m.xp} XP`);
 }
+
 
 // 💬 Góc ẩn danh
 document.getElementById('sendAnon').addEventListener('click',async()=>{
