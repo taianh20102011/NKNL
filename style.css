@@ -1139,4 +1139,246 @@ textarea#anon-input {
 .btn-go:hover {
   background: var(--accent-hover, #5a5cff);
 }
+/* 🌈 STYLE TRẺ TRUNG — 2025 UPDATE */
 
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+:root {
+  --bg: #f7faff;
+  --surface: #ffffff;
+  --card: linear-gradient(180deg, #ffffff, #f0f5ff);
+  --accent: #6c63ff;
+  --accent-2: #00d4ff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: rgba(0, 0, 0, 0.08);
+  --radius: 14px;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
+/* 🌙 DARK MODE */
+[data-theme="dark"] {
+  --bg: #0e0f1a;
+  --surface: #14162b;
+  --card: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  --accent: #7f7fff;
+  --accent-2: #00d4ff;
+  --text: #f9fafb;
+  --muted: #9ca3af;
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: radial-gradient(1200px 800px at 50% 10%, rgba(108,99,255,0.08), transparent), var(--bg);
+  color: var(--text);
+  margin: 0;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+/* 🌟 NAVBAR */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fff;
+  padding: 12px 0;
+  box-shadow: 0 4px 20px rgba(108,99,255,0.25);
+}
+
+.nav-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+  margin: auto;
+}
+
+.brand {
+  font-size: 1.5em;
+  font-weight: 800;
+  text-decoration: none;
+  color: #fff;
+}
+
+.brand span {
+  color: #ffe066;
+}
+
+.menu a {
+  color: white;
+  margin: 0 12px;
+  text-decoration: none;
+  font-weight: 600;
+  position: relative;
+}
+
+.menu a:hover {
+  color: #ffe066;
+}
+
+.menu a::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  left: 0;
+  bottom: -3px;
+  background: #ffe066;
+  transition: width 0.3s ease;
+}
+
+.menu a:hover::after {
+  width: 100%;
+}
+
+/* ✨ PAGE */
+.page {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.2rem;
+  color: var(--accent);
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 🧁 BUTTONS */
+.btn {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(108,99,255,0.25);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108,99,255,0.35);
+}
+
+/* 🌈 TEXTAREA */
+textarea {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  width: 100%;
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color 0.25s ease;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(108,99,255,0.25);
+  outline: none;
+}
+
+/* 📦 CARDS */
+.card,
+.mission-card,
+.profile-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 18px;
+  box-shadow: 0 4px 16px rgba(108,99,255,0.08);
+}
+
+.card:hover,
+.mission-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(108,99,255,0.15);
+}
+
+/* 🧠 XP BOX */
+.xp-box {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, rgba(108,99,255,0.1), rgba(0,212,255,0.1));
+  border: 1px solid var(--border);
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* 🏆 LEADERBOARD */
+.leaderboard {
+  margin-top: 30px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.leaderboard li {
+  background: rgba(108,99,255,0.06);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  padding: 10px;
+  list-style: none;
+  color: var(--text);
+}
+
+.leaderboard li:nth-child(1) {
+  background: linear-gradient(90deg, #ffd700, #ffe066);
+  color: #333;
+  font-weight: 800;
+}
+
+.leaderboard li:nth-child(2) {
+  background: linear-gradient(90deg, #d1d5db, #e5e7eb);
+  color: #333;
+}
+
+.leaderboard li:nth-child(3) {
+  background: linear-gradient(90deg, #cd7f32, #d97706);
+  color: #fff;
+}
+
+/* 🌙 FOOTER */
+.footer {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: white;
+  padding: 18px;
+  font-weight: 600;
+  text-align: center;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(108,99,255,0.2);
+}
+
+/* 📱 RESPONSIVE */
+@media (max-width: 768px) {
+  .menu {
+    display: none;
+  }
+
+  .nav-inner {
+    flex-direction: column;
+  }
+
+  .brand {
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+}
