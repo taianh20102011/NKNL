@@ -1,24 +1,54 @@
 <!doctype html>
 <html lang="vi">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Features</title><link rel="stylesheet" href="style.css"></head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📁 Minh chứng kỹ năng — Nhật ký Năng lực</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
-<header class="nav"><div class="container nav-inner"><a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a></div></header>
-<main class="page">
-  <h1>📁 Minh chứng kỹ năng</h1>
-  <textarea id="evidence" placeholder="Mô tả minh chứng..." style="width:100%;padding:8px"></textarea>
-  <div style="margin-top:8px"><button id="submitEvidence" class="btn">Nộp minh chứng</button></div>
-</main>
+<header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
+      <button id="nav-toggle" class="hamburger" aria-label="Mở menu">☰</button>
+      <div class="menu" id="nav-menu">
+        <a href="index.html">Trang chủ</a>
+        <a href="journal.html">Nhật ký</a>
+        <a href="features.html">Tính năng</a>
+        <a href="missions.html">Nhiệm vụ</a>
+        <a href="profile.html">Hồ sơ</a>
+        <a href="growth.html" class="active">Lộ trình</a>
+        <a href="login.html" id="logout-btn">Đăng xuất</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Đổi giao diện">🌙</button>
+    </div>
+  </header>
 
-<script type="module">
-import { markMissionDone } from "missionsTracker.js";
+  <main class="page">
+    <h1>📁 Minh chứng kỹ năng</h1>
+    <textarea id="evidence" placeholder="Mô tả minh chứng..." style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);"></textarea>
+    <div style="margin-top:8px">
+      <button id="submitEvidence" class="btn">Nộp minh chứng</button>
+    </div>
+  </main>
 
-document.getElementById("submitProof")?.addEventListener("click", async () => {
-  const proof = document.getElementById("proofInput")?.value || "";
-  if (!proof) return alert("Hãy tải hoặc nhập minh chứng trước!");
-  await markMissionDone("m2");
-  console.log("✅ Đã đánh dấu hoàn thành nhiệm vụ: Nộp minh chứng kỹ năng (m2)");
-});
+  <footer class="footer">© 2025 Nhật ký Năng lực</footer>
 
-</script>
+  <script type="module">
+    import { markMissionDone } from "./missionsTracker.js"; // ✅ Chuẩn GitHub Pages
+
+    const btn = document.getElementById("submitEvidence");
+    btn?.addEventListener("click", async () => {
+      const content = document.getElementById("evidence")?.value.trim() || "";
+      if (!content) {
+        alert("⚠️ Vui lòng mô tả minh chứng trước khi nộp!");
+        return;
+      }
+
+      await markMissionDone("m2");
+      alert("✅ Đã hoàn thành nhiệm vụ: Nộp minh chứng kỹ năng (m2)!");
+      document.getElementById("evidence").value = "";
+    });
+  </script>
 </body>
 </html>
