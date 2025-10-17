@@ -22,7 +22,6 @@
   .node:hover { background:var(--accent); color:white; transform:scale(1.05); }
   .node.locked { opacity:0.4; cursor:not-allowed; }
   .node.unlocked { box-shadow:0 0 10px rgba(79,70,229,0.3); }
-  .line { width:2px; background:var(--border); height:40px; margin:auto; }
   #notify { text-align:center; margin-top:20px; font-weight:600; }
 </style>
 </head>
@@ -51,11 +50,12 @@
     <p id="notify"></p>
   </main>
 
+  <!-- 🔹 Mã JS chính -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-    import { markMissionDone } from "missionsTracker.js"; // liên kết nhiệm vụ
+    import { markMissionDone } from "./missionsTracker.js"; // ✅ Đường dẫn chuẩn GitHub Pages
 
     const firebaseConfig = {
       apiKey: "AIzaSyCtp4izpF1GCH2qWpeLtZOdk33A_iNKzqg",
@@ -76,6 +76,7 @@
       { id: 4, title: "Lãnh đạo bản thân 🌟", xp: 200 },
     ];
 
+    // 🧩 Render cây kỹ năng
     function renderTree(xp) {
       growthTree.innerHTML = "";
       skillPath.forEach((s) => {
@@ -86,6 +87,7 @@
           <div>${s.title}</div>
           <small>${unlocked ? "✅ Hoàn thành" : "🔒 Cần " + s.xp + " XP"}</small>
         `;
+
         if (unlocked) {
           node.addEventListener("click", async () => {
             await markMissionDone("growth_" + s.id);
@@ -93,18 +95,21 @@
             setTimeout(() => (notify.textContent = ""), 3000);
           });
         }
+
         growthTree.appendChild(node);
       });
     }
 
-    // Lấy XP hiện tại
+    // 🔥 Lấy XP người dùng từ Firestore
     onAuthStateChanged(auth, async (user) => {
-      let xp = Number(localStorage.getItem("missions_xp_local") || 0);
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const snap = await getDoc(docRef);
-        xp = snap.exists() ? snap.data().xp || xp : xp;
+      if (!user) {
+        alert("⚠️ Hãy đăng nhập để xem lộ trình năng lực!");
+        renderTree(0);
+        return;
       }
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const xp = snap.exists() ? snap.data().xp || 0 : 0;
       renderTree(xp);
     });
 
@@ -112,11 +117,8 @@
     const themeToggle = document.getElementById("theme-toggle");
     let currentTheme = localStorage.getItem("theme") || "dark";
     const applyTheme = (theme) => {
-      if (theme === "light") {
-        document.documentElement.setAttribute("data-theme", "light");
-      } else {
-        document.documentElement.removeAttribute("data-theme");
-      }
+      if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+      else document.documentElement.removeAttribute("data-theme");
     };
     applyTheme(currentTheme);
     themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
@@ -127,26 +129,13 @@
       themeToggle.textContent = currentTheme === "light" ? "🌞" : "🌙";
     });
 
-    // 📱 Navbar mobile toggle
+    // 📱 Navbar toggle
     const navToggle = document.getElementById("nav-toggle");
     const navMenu = document.getElementById("nav-menu");
-    navToggle.addEventListener("click", () => {
-      navMenu.classList.toggle("mobile-open");
-    });
+    navToggle.addEventListener("click", () => navMenu.classList.toggle("mobile-open"));
     document.addEventListener("click", (e) => {
-      if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-        navMenu.classList.remove("mobile-open");
-      }
+      if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) navMenu.classList.remove("mobile-open");
     });
-    import { markMissionDone } from "./missionsTracker.js";
-
-document.getElementById("finishLearning")?.addEventListener("click", async () => {
-  const learned = Number(localStorage.getItem("words_learned") || 0);
-  if (learned < 20) return alert("Bạn cần học đủ 20 từ mới để hoàn thành nhiệm vụ!");
-  await markMissionDone("m3");
-  console.log("✅ Đã đánh dấu hoàn thành nhiệm vụ: Học 20 từ mới (m3)");
-});
-
   </script>
 </body>
 </html>
