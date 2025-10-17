@@ -3,13 +3,21 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
 
 const LS_COMPLETE = 'missions_state';
 
+// 🔒 Đánh dấu nhiệm vụ hoàn thành (chỉ khi người dùng thật sự làm)
 export async function markMissionDone(missionId) {
   const map = JSON.parse(localStorage.getItem(LS_COMPLETE) || "{}");
-  if (!map[missionId]) map[missionId] = { done: true, claimed: false };
-  else map[missionId].done = true;
+
+  // Nếu nhiệm vụ chưa có -> thêm vào danh sách
+  if (!map[missionId]) {
+    map[missionId] = { done: true, claimed: false, timestamp: Date.now() };
+  } else if (!map[missionId].done) {
+    map[missionId].done = true;
+    map[missionId].timestamp = Date.now();
+  }
+
   localStorage.setItem(LS_COMPLETE, JSON.stringify(map));
 
-  // cập nhật Firebase nếu có đăng nhập
+  // Cập nhật Firebase nếu người dùng đã đăng nhập
   const auth = getAuth();
   const user = auth.currentUser;
   if (user) {
@@ -18,7 +26,9 @@ export async function markMissionDone(missionId) {
     const snap = await getDoc(ref);
     const data = snap.exists() ? snap.data() : {};
     const missions = data.missions || {};
-    missions[missionId] = { done: true, claimed: missions[missionId]?.claimed || false };
-    await setDoc(ref, { missions }, { merge: true });
+    if (!missions[missionId] || !missions[missionId].done) {
+      missions[missionId] = { done: true, claimed: missions[missionId]?.claimed || false, timestamp: Date.now() };
+      await setDoc(ref, { missions }, { merge: true });
+    }
   }
 }
