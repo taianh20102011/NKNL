@@ -8,22 +8,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header class="nav">
+  <header class="nav">
     <div class="container nav-inner">
-
-    <div class="nav-inner">
       <a href="index.html" class="brand">NHẬT KÍ<span>NĂNG LỰC</span></a>
-    <!-- Hamburger button -->
-    <button id="nav-toggle" class="hamburger" aria-label="Mở menu">☰</button>
-      <div class="menu" id="nav-menu">
-      <a href="index.html">Trang chủ</a>
-      <a href="journal.html">Nhật ký</a>
-      <a href="features.html">Tính năng</a>
-      <a href="missions.html">Nhiệm vụ</a>
-      <a href="profile.html">Hồ sơ</a>
+      <button id="nav-toggle" class="hamburger" aria-label="Mở menu">☰</button>
+      <nav class="menu" id="nav-menu">
+        <a href="index.html">Trang chủ</a>
+        <a href="journal.html" class="active">Nhật ký</a>
+        <a href="features.html">Tính năng</a>
+        <a href="missions.html">Nhiệm vụ</a>
+        <a href="profile.html">Hồ sơ</a>
         <a href="login.html" id="logout-btn">Đăng xuất</a>
-      </div>
-    </div>
+      </nav>
       <button id="theme-toggle" class="theme-toggle-btn" aria-label="Chuyển chủ đề">🌙</button>
     </div>
   </header> 
@@ -50,34 +46,36 @@
         <ul id="journal-list"></ul>
       </section>
     </div>
-<section id="ai-analysis" class="ai-box">
-  <h3>🧠 Phân tích AI</h3>
-  <p id="ai-result">Chưa có dữ liệu để phân tích.</p>
-  <button id="analyze-btn" class="btn-ai">Phân tích biểu đồ</button>
-</section>
 
+    <section id="ai-analysis" class="ai-box">
+      <h3>🧠 Phân tích AI</h3>
+      <p id="ai-result">Chưa có dữ liệu để phân tích.</p>
+      <button id="analyze-btn" class="btn-ai">Phân tích biểu đồ</button>
+    </section>
   </main>
 
   <footer class="footer">© 2025 Nhật ký Năng lực</footer>
 
-  <script type="module" src="main.js">
-import { markMissionDone } from "missionsTracker.js";
+  <!-- 🔹 JS chính -->
+  <script type="module" src="main.js"></script>
 
-document.getElementById("saveEntry")?.addEventListener("click", async () => {
-  const text = document.getElementById("entryText")?.value.trim() || "";
-  if (text.split(/\s+/).length < 10) return alert("Hãy viết ít nhất 3 dòng cảm nhận nhé!");
-  await markMissionDone("m1");
-  console.log("✅ Đã đánh dấu hoàn thành nhiệm vụ: Viết 3 dòng cảm nhận (m1)");
-});
+  <!-- 🔹 Đánh dấu hoàn thành nhiệm vụ m1 -->
+  <script type="module">
+    import { markMissionDone } from "./missionsTracker.js";
+
+    const form = document.getElementById("journal-form");
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const text = document.getElementById("activities")?.value.trim() || "";
+      if (text.length < 50) {
+        alert("✍️ Hãy viết ít nhất 50 ký tự để hoàn thành nhiệm vụ nhé!");
+        return;
+      }
+
+      await markMissionDone("m1");
+      alert("✅ Đã hoàn thành nhiệm vụ viết nhật ký (m1)!");
+    });
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
